@@ -12,6 +12,12 @@ local function getDatabase()
     if type(ForeverNPCAbilitiesDB.alwaysShowDescriptions) ~= "boolean" then
         ForeverNPCAbilitiesDB.alwaysShowDescriptions = false
     end
+    if type(ForeverNPCAbilitiesDB.showEnemyUnits) ~= "boolean" then
+        ForeverNPCAbilitiesDB.showEnemyUnits = true
+    end
+    if type(ForeverNPCAbilitiesDB.showFriendlyUnits) ~= "boolean" then
+        ForeverNPCAbilitiesDB.showFriendlyUnits = true
+    end
     if ForeverNPCAbilitiesDB.hotkeyMode ~= "TOGGLE" then
         ForeverNPCAbilitiesDB.hotkeyMode = "HOLD"
     end
@@ -113,8 +119,43 @@ alwaysShowDescriptionsCheck:SetScript("OnClick", function(self)
     end
 end)
 
+local function refreshCurrentTooltip()
+    if GameTooltip:IsShown() then
+        local _, unit = GameTooltip:GetUnit()
+        if unit and UnitExists(unit) then
+            GameTooltip:SetUnit(unit)
+        end
+    end
+end
+
+local unitTypesLabel = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+unitTypesLabel:SetPoint("TOPLEFT", alwaysShowDescriptionsCheck, "BOTTOMLEFT", 4, -12)
+unitTypesLabel:SetText("Show abilities for")
+
+local enemyUnitsCheck = CreateFrame("CheckButton", nil, optionsPanel, "InterfaceOptionsCheckButtonTemplate")
+enemyUnitsCheck:SetPoint("TOPLEFT", unitTypesLabel, "BOTTOMLEFT", -4, -4)
+enemyUnitsCheck.Text:SetText("Enemy units")
+enemyUnitsCheck:SetScript("OnShow", function(self)
+    self:SetChecked(getDatabase().showEnemyUnits)
+end)
+enemyUnitsCheck:SetScript("OnClick", function(self)
+    getDatabase().showEnemyUnits = self:GetChecked()
+    refreshCurrentTooltip()
+end)
+
+local friendlyUnitsCheck = CreateFrame("CheckButton", nil, optionsPanel, "InterfaceOptionsCheckButtonTemplate")
+friendlyUnitsCheck:SetPoint("TOPLEFT", enemyUnitsCheck, "BOTTOMLEFT", 0, -4)
+friendlyUnitsCheck.Text:SetText("Friendly units")
+friendlyUnitsCheck:SetScript("OnShow", function(self)
+    self:SetChecked(getDatabase().showFriendlyUnits)
+end)
+friendlyUnitsCheck:SetScript("OnClick", function(self)
+    getDatabase().showFriendlyUnits = self:GetChecked()
+    refreshCurrentTooltip()
+end)
+
 local hotkeyModeLabel = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-hotkeyModeLabel:SetPoint("TOPLEFT", alwaysShowDescriptionsCheck, "BOTTOMLEFT", 4, -12)
+hotkeyModeLabel:SetPoint("TOPLEFT", friendlyUnitsCheck, "BOTTOMLEFT", 4, -8)
 hotkeyModeLabel:SetText("Hotkey mode")
 
 local hotkeyModeDropdown = CreateFrame("Frame", "ForeverNPCAbilitiesHotkeyModeDropdown", optionsPanel, "UIDropDownMenuTemplate")
@@ -233,15 +274,6 @@ local detailOptions = {
     {key = "castTime", label = "Show Cast time"},
     {key = "spellSchool", label = "Show Spell school"},
 }
-
-local function refreshCurrentTooltip()
-    if GameTooltip:IsShown() then
-        local _, unit = GameTooltip:GetUnit()
-        if unit and UnitExists(unit) then
-            GameTooltip:SetUnit(unit)
-        end
-    end
-end
 
 for index, option in ipairs(detailOptions) do
     local optionKey = option.key

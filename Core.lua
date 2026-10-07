@@ -10,6 +10,7 @@ local function getNpcIDFromGUID(guid)
     end
 
     local npcID = guid:match("^Creature%-%d+%-%d+%-%d+%-%d+%-(%d+)%-")
+        or guid:match("^Vehicle%-%d+%-%d+%-%d+%-%d+%-(%d+)%-")
     if npcID then
         return tonumber(npcID)
     end
@@ -168,6 +169,15 @@ local function appendAbilities(tooltip)
 
     local _, unit = tooltip:GetUnit()
     if not unit or not UnitExists(unit) then
+        return
+    end
+
+    local isEnemy = UnitCanAttack("player", unit)
+    local isFriendly = UnitIsFriend("player", unit)
+    if (isEnemy and not database.showEnemyUnits)
+        or (isFriendly and not database.showFriendlyUnits)
+        or (not isEnemy and not isFriendly)
+    then
         return
     end
 
@@ -437,6 +447,12 @@ eventFrame:SetScript("OnEvent", function(_, _, loadedAddon)
     end
 
     database = ForeverNPCAbilitiesDB
+    if type(database.showEnemyUnits) ~= "boolean" then
+        database.showEnemyUnits = true
+    end
+    if type(database.showFriendlyUnits) ~= "boolean" then
+        database.showFriendlyUnits = true
+    end
     if type(database.details) ~= "table" then
         database.details = {}
     end
