@@ -84,6 +84,19 @@ local function schoolNameFromMask(mask)
     return #names > 0 and table.concat(names, "/") or nil
 end
 
+local function getSpellSchool(spellID)
+    if not spellID then
+        return nil
+    end
+
+    local schoolMasks = ForeverNPCAbilitiesSpellSchools
+    local mask = schoolMasks and schoolMasks[spellID]
+    if not mask and database and database.spellSchools then
+        mask = database.spellSchools[spellID]
+    end
+    return schoolNameFromMask(mask)
+end
+
 local function formatBinding(binding)
     local parts = {}
     local labels = {
@@ -180,7 +193,7 @@ local function appendAbilities(tooltip)
                 texture = getSpellTexture(spellID),
                 range = metadata.range,
                 castTime = metadata.castTime,
-                spellSchool = metadata.spellSchool,
+                spellSchool = metadata.spellSchool or getSpellSchool(spellID),
             }
             knownNames[normalizedName] = existing
             knownAbilities[#knownAbilities + 1] = existing
@@ -191,7 +204,7 @@ local function appendAbilities(tooltip)
             existing.texture = existing.texture or getSpellTexture(spellID)
             existing.range = existing.range or metadata.range
             existing.castTime = existing.castTime or metadata.castTime
-            existing.spellSchool = existing.spellSchool or metadata.spellSchool
+            existing.spellSchool = existing.spellSchool or metadata.spellSchool or getSpellSchool(spellID)
         end
     end
 
@@ -225,7 +238,7 @@ local function appendAbilities(tooltip)
                 {
                     range = spell and spell.range,
                     castTime = spell and spell.cast_time,
-                    spellSchool = schoolNameFromMask(database.spellSchools and database.spellSchools[spellID]),
+                    spellSchool = getSpellSchool(spellID),
                 }
             )
         end
@@ -254,7 +267,7 @@ local function appendAbilities(tooltip)
                     spellID = numericSpellID,
                     description = getSpellDescription(numericSpellID),
                     texture = getSpellTexture(numericSpellID),
-                    spellSchool = schoolNameFromMask(database.spellSchools and database.spellSchools[numericSpellID]),
+                    spellSchool = getSpellSchool(numericSpellID),
                 }
                 shownNames[normalizedName] = true
             end

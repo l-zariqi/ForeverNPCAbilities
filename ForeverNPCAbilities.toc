@@ -7,6 +7,7 @@
 Abilities.lua
 Database/abilities.lua
 Database/Abilities/enUS.lua
+Database/spellSchools.lua
 Database/npcs.lua
 Commands.lua
 Core.lua
