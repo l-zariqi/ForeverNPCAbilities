@@ -236,6 +236,7 @@ local function appendAbilities(tooltip)
     local hasKnownAbilities = #knownAbilities > 0
 
     if hasKnownAbilities then
+        tooltip:AddLine("Known abilities:", 1, 0.82, 0, true)
         for _, ability in ipairs(knownAbilities) do
             addAbilityLine(tooltip, ability)
             shownNames[string.lower(ability.name)] = true
