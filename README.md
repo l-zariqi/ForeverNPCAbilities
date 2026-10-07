@@ -1,6 +1,6 @@
 # Forever NPC Abilities
 
-An addon for the WoW client used by Forever (Interface 16001). It appends known abilities to NPC tooltips, including friendly units that are not attackable, when you hover over them.
+Shows known NPC abilities and spell details to the in-game tooltip.
 
 ## Install
 
@@ -10,7 +10,7 @@ Copy the `ForeverNPCAbilities` folder into the game's `Interface\AddOns` folder,
 
 The bundled catalog includes NPC abilities that appear immediately when you hover a listed NPC, whether it is friendly or hostile. Vehicle units are also supported when their NPC ID is present in the catalog. Automatic combat-log learning is disabled because this Forever client blocks the addon's combat-log event registration. Previously saved observations remain available, but NPCs missing from the catalog will not be learned automatically.
 
-The bundled catalog also includes the original NpcAbilities Classic NPC-to-spell mappings and English spell data. For NPCs in that catalog, abilities appear immediately when you hover them, with the spell icon and description where available. The dataset is credited to [rubenzantingh/NpcAbilities](https://github.com/rubenzantingh/NpcAbilities) and was adapted with the author's permission.
+The bundled catalog also includes the original NpcAbilities Classic NPC-to-spell mappings and English spell data. For NPCs in that catalog, abilities appear immediately when you hover them, with the spell icon and description where available.
 
 Spell school masks are bundled from Wago.Tools' Classic `SpellMisc` data (build `1.60.1.70245`), with missing records backfilled from TBC Classic (build `2.5.6.70006`). School details may be unavailable for spell IDs absent from both exports.
 
