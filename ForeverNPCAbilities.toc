@@ -1,7 +1,7 @@
 ## Interface: 16001
 ## Title: Forever NPC Abilities
 ## Notes: Shows known abilities in enemy NPC tooltips.
-## Version: 1.0.0
+## Version: 1.0.1
 ## SavedVariables: ForeverNPCAbilitiesDB
 
 Abilities.lua
