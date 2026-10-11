@@ -101,9 +101,9 @@ end
 local function formatBinding(binding)
     local parts = {}
     local labels = {
-        CTRL = "Ctrl",
-        ALT = "Alt",
-        SHIFT = "Shift",
+        CTRL = "CTRL",
+        ALT = "ALT",
+        SHIFT = "SHIFT",
     }
     for part in binding:gmatch("[^-]+") do
         parts[#parts + 1] = labels[part] or part
@@ -128,7 +128,9 @@ local function addAbilityLine(tooltip, ability)
     local icon = ability.texture and ("|T" .. tostring(ability.texture) .. ":16:16:0:0:64:64:4:60:4:60|t ") or ""
     tooltip:AddLine(icon .. ability.name, 1, 1, 1, true)
     local details = database.details
-    if details then
+    local showDetails = database.detailDisplayMode == "ALWAYS"
+        or (database.detailDisplayMode == "KEY" and state.descriptionKeyDown)
+    if details and showDetails then
         if details.range and ability.range and ability.range ~= "" then
             tooltip:AddLine("Range: " .. ability.range, 0.85, 0.85, 0.85, true)
         end
@@ -317,7 +319,9 @@ local function appendAbilities(tooltip)
     end
 
     local hasAbilities = hasKnownAbilities or #newObservedSpells > 0
-    local descriptionKey = not database.alwaysShowDescriptions
+    local detailsNeedKey = database.detailDisplayMode == "KEY"
+        and (database.details.range or database.details.castTime or database.details.spellSchool)
+    local descriptionKey = (not database.alwaysShowDescriptions or detailsNeedKey)
         and not state.descriptionKeyDown
         and getDescriptionKeyLabel()
     if hasAbilities and descriptionKey then
@@ -455,6 +459,9 @@ eventFrame:SetScript("OnEvent", function(_, _, loadedAddon)
     end
     if type(database.details) ~= "table" then
         database.details = {}
+    end
+    if database.detailDisplayMode ~= "KEY" and database.detailDisplayMode ~= "NEVER" then
+        database.detailDisplayMode = "ALWAYS"
     end
     for _, key in ipairs({"range", "castTime", "spellSchool"}) do
         if type(database.details[key]) ~= "boolean" then

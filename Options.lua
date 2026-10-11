@@ -27,6 +27,9 @@ local function getDatabase()
     if type(ForeverNPCAbilitiesDB.details) ~= "table" then
         ForeverNPCAbilitiesDB.details = {}
     end
+    if ForeverNPCAbilitiesDB.detailDisplayMode ~= "KEY" and ForeverNPCAbilitiesDB.detailDisplayMode ~= "NEVER" then
+        ForeverNPCAbilitiesDB.detailDisplayMode = "ALWAYS"
+    end
     for _, key in ipairs({"range", "castTime", "spellSchool"}) do
         if type(ForeverNPCAbilitiesDB.details[key]) ~= "boolean" then
             ForeverNPCAbilitiesDB.details[key] = true
@@ -269,6 +272,45 @@ local detailsLabel = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNorm
 detailsLabel:SetPoint("TOPLEFT", bindingHelp, "BOTTOMLEFT", 0, -18)
 detailsLabel:SetText("Ability details")
 
+local detailDisplayDropdown = CreateFrame("Frame", "ForeverNPCAbilitiesDetailDisplayDropdown", optionsPanel, "UIDropDownMenuTemplate")
+detailDisplayDropdown:SetPoint("TOPLEFT", detailsLabel, "BOTTOMLEFT", -16, -4)
+UIDropDownMenu_SetWidth(detailDisplayDropdown, 190)
+
+local function setDetailDisplayText()
+    local mode = getDatabase().detailDisplayMode
+    local modeLabels = {
+        ALWAYS = "Always",
+        KEY = "While key is active",
+        NEVER = "Never",
+    }
+    UIDropDownMenu_SetSelectedValue(detailDisplayDropdown, mode)
+    UIDropDownMenu_SetText(detailDisplayDropdown, modeLabels[mode])
+end
+
+UIDropDownMenu_Initialize(detailDisplayDropdown, function(_, level)
+    local modes = {
+        {value = "ALWAYS", text = "Always"},
+        {value = "KEY", text = "While key is active"},
+        {value = "NEVER", text = "Never"},
+    }
+    for _, mode in ipairs(modes) do
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = mode.text
+        info.value = mode.value
+        info.checked = getDatabase().detailDisplayMode == mode.value
+        info.func = function(self)
+            getDatabase().detailDisplayMode = self.value
+            setDetailDisplayText()
+            refreshCurrentTooltip()
+        end
+        UIDropDownMenu_AddButton(info, level)
+    end
+end)
+
+detailDisplayDropdown:SetScript("OnShow", function()
+    setDetailDisplayText()
+end)
+
 local detailOptions = {
     {key = "range", label = "Show Range"},
     {key = "castTime", label = "Show Cast time"},
@@ -278,7 +320,7 @@ local detailOptions = {
 for index, option in ipairs(detailOptions) do
     local optionKey = option.key
     local checkbox = CreateFrame("CheckButton", nil, optionsPanel, "InterfaceOptionsCheckButtonTemplate")
-    checkbox:SetPoint("TOPLEFT", detailsLabel, "BOTTOMLEFT", 0, -8 - (index - 1) * 28)
+    checkbox:SetPoint("TOPLEFT", detailDisplayDropdown, "BOTTOMLEFT", 16, -4 - (index - 1) * 28)
     checkbox.Text:SetText(option.label)
     checkbox:SetScript("OnShow", function(self)
         self:SetChecked(getDatabase().details[optionKey])
@@ -291,6 +333,7 @@ end
 
 optionsPanel:SetScript("OnShow", function()
     setHotkeyModeText()
+    setDetailDisplayText()
 end)
 
 local category
