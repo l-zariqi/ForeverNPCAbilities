@@ -1,8 +1,44 @@
 local addonName, addon = ...
 local descriptionKeyBinding = "CLICK ForeverNPCAbilitiesDescriptionKeyButton:LeftButton"
 
+local defaultAbilityColors = {
+    name = {r = 1, g = 1, b = 1},
+    description = {r = 1, g = 0.82, b = 0},
+    details = {r = 0.85, g = 0.85, b = 0.85},
+}
+
 local database
 local state = addon.State
+
+local function getAbilityColor(colorKey)
+    if type(database) ~= "table" then
+        local defaultColor = defaultAbilityColors[colorKey] or defaultAbilityColors.name
+        return defaultColor.r, defaultColor.g, defaultColor.b
+    end
+
+    if type(database.colors) ~= "table" then
+        database.colors = {}
+    end
+
+    for key, defaultColor in pairs(defaultAbilityColors) do
+        if type(database.colors[key]) ~= "table" then
+            database.colors[key] = {r = defaultColor.r, g = defaultColor.g, b = defaultColor.b}
+        else
+            if type(database.colors[key].r) ~= "number" then
+                database.colors[key].r = defaultColor.r
+            end
+            if type(database.colors[key].g) ~= "number" then
+                database.colors[key].g = defaultColor.g
+            end
+            if type(database.colors[key].b) ~= "number" then
+                database.colors[key].b = defaultColor.b
+            end
+        end
+    end
+
+    local color = database.colors[colorKey] or defaultAbilityColors[colorKey]
+    return color.r, color.g, color.b
+end
 
 local function getNpcIDFromGUID(guid)
     if not guid then
@@ -126,26 +162,29 @@ end
 
 local function addAbilityLine(tooltip, ability)
     local icon = ability.texture and ("|T" .. tostring(ability.texture) .. ":16:16:0:0:64:64:4:60:4:60|t ") or ""
-    tooltip:AddLine(icon .. ability.name, 1, 1, 1, true)
+    local nameR, nameG, nameB = getAbilityColor("name")
+    tooltip:AddLine(icon .. ability.name, nameR, nameG, nameB, true)
     local details = database.details
     local showDetails = database.detailDisplayMode == "ALWAYS"
         or (database.detailDisplayMode == "KEY" and state.descriptionKeyDown)
+    local detailR, detailG, detailB = getAbilityColor("details")
     if details and showDetails then
         if details.range and ability.range and ability.range ~= "" then
-            tooltip:AddLine("Range: " .. ability.range, 0.85, 0.85, 0.85, true)
+            tooltip:AddLine("Range: " .. ability.range, detailR, detailG, detailB, true)
         end
         if details.castTime and ability.castTime and ability.castTime ~= "" then
-            tooltip:AddLine("Cast time: " .. ability.castTime, 0.85, 0.85, 0.85, true)
+            tooltip:AddLine("Cast time: " .. ability.castTime, detailR, detailG, detailB, true)
         end
         if details.spellSchool and ability.spellSchool and ability.spellSchool ~= "" then
-            tooltip:AddLine("Spell school: " .. ability.spellSchool, 0.85, 0.85, 0.85, true)
+            tooltip:AddLine("Spell school: " .. ability.spellSchool, detailR, detailG, detailB, true)
         end
     end
+    local descriptionR, descriptionG, descriptionB = getAbilityColor("description")
     if (database.alwaysShowDescriptions or state.descriptionKeyDown)
         and ability.description
         and ability.description ~= ""
     then
-        tooltip:AddLine(ability.description, 1, 0.82, 0, true)
+        tooltip:AddLine(ability.description, descriptionR, descriptionG, descriptionB, true)
     end
 end
 
@@ -460,12 +499,30 @@ eventFrame:SetScript("OnEvent", function(_, _, loadedAddon)
     if type(database.details) ~= "table" then
         database.details = {}
     end
+    if type(database.colors) ~= "table" then
+        database.colors = {}
+    end
     if database.detailDisplayMode ~= "KEY" and database.detailDisplayMode ~= "NEVER" then
         database.detailDisplayMode = "ALWAYS"
     end
     for _, key in ipairs({"range", "castTime", "spellSchool"}) do
         if type(database.details[key]) ~= "boolean" then
-            database.details[key] = true
+            database.details[key] = false
+        end
+    end
+    for key, defaultColor in pairs(defaultAbilityColors) do
+        if type(database.colors[key]) ~= "table" then
+            database.colors[key] = {r = defaultColor.r, g = defaultColor.g, b = defaultColor.b}
+        else
+            if type(database.colors[key].r) ~= "number" then
+                database.colors[key].r = defaultColor.r
+            end
+            if type(database.colors[key].g) ~= "number" then
+                database.colors[key].g = defaultColor.g
+            end
+            if type(database.colors[key].b) ~= "number" then
+                database.colors[key].b = defaultColor.b
+            end
         end
     end
     if type(database.spellSchools) ~= "table" then
