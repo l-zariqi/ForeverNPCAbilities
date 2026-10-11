@@ -1,4 +1,3 @@
 ## Version 1.0.1
 
-- Initial release.
-- Added friendly and enemy NPC ability tracking.
+- Capitalised modifier keybinds and added more options for ability details
