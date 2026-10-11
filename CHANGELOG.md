@@ -7,4 +7,8 @@
 
 ## Version 1.0.1
 
-- Capitalised modifier keybinds and added more options for ability details
+- Capitalised modifier keybinds and added more options for ability details.
+
+## Version 1.0.0
+
+- Initial release.

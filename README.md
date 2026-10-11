@@ -4,7 +4,16 @@ Shows known NPC abilities and spell details to the in-game tooltip.
 
 ## Install
 
-Copy the `ForeverNPCAbilities` folder into the game's `Interface\AddOns` folder, then enable the addon on the character select screen.
+### CurseForge app
+
+1. Open the [Forever NPC Abilities project page](https://www.curseforge.com/wow/addons/forever-npc-abilities) and select **Install** to open it in the CurseForge app. You can also search for **Forever NPC Abilities** in the app's World of Warcraft addons.
+2. In the CurseForge app, choose the World of Warcraft installation used by your Forever client and install the addon.
+3. Launch the game and enable **Forever NPC Abilities** on the character select screen.
+
+### Manual installation
+
+Download the addon from the [CurseForge project page](https://www.curseforge.com/wow/addons/forever-npc-abilities), then copy the `ForeverNPCAbilities` folder into the game's `Interface\AddOns` folder. Enable the addon on the character select screen.
+
 
 ## Ability data
 
