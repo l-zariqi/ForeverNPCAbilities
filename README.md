@@ -6,11 +6,11 @@ Shows known NPC abilities and spell details to the in-game tooltip. It uses a bu
 
 ### CurseForge app
 
-Open the [Forever NPC Abilities project page](https://www.curseforge.com/wow/addons/forever-npc-abilities) and select **Install** to open it in the CurseForge app. You can also search for **Forever NPC Abilities** in the app's World of Warcraft category.
+- Open the [Forever NPC Abilities project page](https://www.curseforge.com/wow/addons/forever-npc-abilities) and select **Install** to open it in the CurseForge app. You can also search for **Forever NPC Abilities** in the app's World of Warcraft category.
 
 ### Manual installation
 
-Download the addon from the [Forever NPC Abilities project page](https://www.curseforge.com/wow/addons/forever-npc-abilities), then copy the `ForeverNPCAbilities` folder into the game's `Interface\AddOns` folder.
+- Download the addon from the [Forever NPC Abilities project page](https://www.curseforge.com/wow/addons/forever-npc-abilities), then copy the `ForeverNPCAbilities` folder into the game's `Interface\AddOns` folder.
 
 
 ## Ability data
@@ -50,4 +50,8 @@ Replace `12345` and the example names with NPC and ability data you have permiss
 
 ## Debug
 
-Use `/fna status`, `/fna debug`, `/fna on`, `/fna off`, or `/fna toggle` to check and control tooltip output. `/fna status` reports whether the core and tooltip hook loaded. `/fna debug` adds the hovered NPC ID and catalog counts to its tooltip. The setting is saved between sessions.
+- Use `/fna status`, `/fna debug`, `/fna on`, `/fna off`, or `/fna toggle` to check and control tooltip output.
+
+- `/fna status` reports whether the core and tooltip hook loaded.
+
+- `/fna debug` adds the hovered NPC ID and catalog counts to its tooltip. The setting is saved between sessions.
