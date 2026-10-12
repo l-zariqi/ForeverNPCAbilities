@@ -24,6 +24,9 @@ local function getDatabase()
     if type(ForeverNPCAbilitiesDB.showFriendlyUnits) ~= "boolean" then
         ForeverNPCAbilitiesDB.showFriendlyUnits = true
     end
+    if type(ForeverNPCAbilitiesDB.hideKnownAbilitiesLine) ~= "boolean" then
+        ForeverNPCAbilitiesDB.hideKnownAbilitiesLine = false
+    end
     if ForeverNPCAbilitiesDB.hotkeyMode ~= "TOGGLE" then
         ForeverNPCAbilitiesDB.hotkeyMode = "HOLD"
     end
@@ -236,8 +239,21 @@ friendlyUnitsCheck:SetScript("OnClick", function(self)
     refreshCurrentTooltip()
 end)
 
+local hideKnownAbilitiesLineCheck = CreateFrame("CheckButton", nil, optionsPanel, "InterfaceOptionsCheckButtonTemplate")
+hideKnownAbilitiesLineCheck:SetPoint("TOPLEFT", friendlyUnitsCheck, "BOTTOMLEFT", 0, -4)
+hideKnownAbilitiesLineCheck.Text:SetText("Hide the \"Known abilities\" line")
+hideKnownAbilitiesLineCheck.Text:SetTextColor(1, 1, 1)
+setOptionTooltip(hideKnownAbilitiesLineCheck, "Hide the \"Known abilities\" line", "Hide the heading above cataloged abilities in unit tooltips.")
+hideKnownAbilitiesLineCheck:SetScript("OnShow", function(self)
+    self:SetChecked(getDatabase().hideKnownAbilitiesLine)
+end)
+hideKnownAbilitiesLineCheck:SetScript("OnClick", function(self)
+    getDatabase().hideKnownAbilitiesLine = self:GetChecked()
+    refreshCurrentTooltip()
+end)
+
 local hotkeyModeLabel = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-hotkeyModeLabel:SetPoint("TOPLEFT", friendlyUnitsCheck, "BOTTOMLEFT", 4, -8)
+hotkeyModeLabel:SetPoint("TOPLEFT", hideKnownAbilitiesLineCheck, "BOTTOMLEFT", 4, -8)
 hotkeyModeLabel:SetText("Hotkey mode")
 
 local hotkeyModeDropdown = CreateFrame("Frame", "ForeverNPCAbilitiesHotkeyModeDropdown", optionsPanel, "UIDropDownMenuTemplate")

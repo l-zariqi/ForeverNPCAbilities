@@ -300,7 +300,9 @@ local function appendAbilities(tooltip)
     local hasKnownAbilities = #knownAbilities > 0
 
     if hasKnownAbilities then
-        tooltip:AddLine("Known abilities:", 1, 0.82, 0, true)
+        if not database.hideKnownAbilitiesLine then
+            tooltip:AddLine("Known abilities:", 1, 0.82, 0, true)
+        end
         for _, ability in ipairs(knownAbilities) do
             addAbilityLine(tooltip, ability)
             shownNames[string.lower(ability.name)] = true
@@ -495,6 +497,9 @@ eventFrame:SetScript("OnEvent", function(_, _, loadedAddon)
     end
     if type(database.showFriendlyUnits) ~= "boolean" then
         database.showFriendlyUnits = true
+    end
+    if type(database.hideKnownAbilitiesLine) ~= "boolean" then
+        database.hideKnownAbilitiesLine = false
     end
     if type(database.details) ~= "table" then
         database.details = {}
