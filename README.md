@@ -1,18 +1,16 @@
 # Forever NPC Abilities
 
-Shows known NPC abilities and spell details to the in-game tooltip.
+Shows known NPC abilities and spell details to the in-game tooltip. It uses a bundled NPC and spell database to show ability names, icons, and available details such as range, cast time, and spell school.
 
 ## Install
 
 ### CurseForge app
 
-1. Open the [Forever NPC Abilities project page](https://www.curseforge.com/wow/addons/forever-npc-abilities) and select **Install** to open it in the CurseForge app. You can also search for **Forever NPC Abilities** in the app's World of Warcraft addons.
-2. In the CurseForge app, choose the World of Warcraft installation used by your Forever client and install the addon.
-3. Launch the game and enable **Forever NPC Abilities** on the character select screen.
+Open the [Forever NPC Abilities project page](https://www.curseforge.com/wow/addons/forever-npc-abilities) and select **Install** to open it in the CurseForge app. You can also search for **Forever NPC Abilities** in the app's World of Warcraft category.
 
 ### Manual installation
 
-Download the addon from the [CurseForge project page](https://www.curseforge.com/wow/addons/forever-npc-abilities), then copy the `ForeverNPCAbilities` folder into the game's `Interface\AddOns` folder. Enable the addon on the character select screen.
+Download the addon from the [Forever NPC Abilities project page](https://www.curseforge.com/wow/addons/forever-npc-abilities), then copy the `ForeverNPCAbilities` folder into the game's `Interface\AddOns` folder.
 
 
 ## Ability data
@@ -38,15 +36,17 @@ Replace `12345` and the example names with NPC and ability data you have permiss
 
 ## Options
 
-- Open the game's **Options > AddOns > Forever NPC Abilities** page to enable or disable tooltips, always show descriptions, choose a **Hold** or **Toggle** hotkey mode, assign the description key, and configure ability details. You can also hide the “Known abilities” heading while keeping the ability entries visible. 
+- Open the game's **Options > AddOns > Forever NPC Abilities** page to enable or disable tooltips, always show descriptions, choose a **Hold** or **Toggle** hotkey mode, assign the description key, and configure ability details. You can also hide the “Known abilities” heading while keeping the ability entries visible.
 
-- Choose whether range, cast time, and spell school details are always shown, shown only while the description key is active, or never shown; the individual checkboxes select which detail types are included. Range and cast time come from the bundled spell catalog; school data comes from the bundled Wago.Tools export. 
+- Use the **Enemy units** and **Friendly units** checkboxes in the options panel to choose which unit types show abilities. Both are enabled by default.
 
-- In Hold mode, hold the selected key while hovering an NPC to show descriptions or key-gated details; in Toggle mode, press it to switch them on or off. When descriptions or details are key-gated, the tooltip shows a hint such as “(CTRL for details)” below the ability list. The key capture button accepts normal keys, key combinations, and modifier keys by themselves. Right-click the key button to clear its binding. 
+- Choose whether range, cast time, and spell school details are always shown, shown only while the description key is active, or never shown; the individual checkboxes select which detail types are included. Range and cast time come from the bundled spell catalog; school data comes from the bundled Wago.Tools export.
+
+- In Hold mode, hold the selected key while hovering an NPC to show descriptions or key-gated details; in Toggle mode, press it to switch them on or off. When descriptions or details are key-gated, the tooltip shows a hint such as “(CTRL for details)” below the ability list. The key capture button accepts normal keys, key combinations, and modifier keys by themselves. Right-click the key button to clear its binding.
 
 - The tooltip colors for ability names, descriptions, and detail text are also configurable in the options panel, with a reset button to restore the original defaults.
 
-- Use the **Enemy units** and **Friendly units** checkboxes in the options panel to choose which unit types show abilities. Both are enabled by default. Neutral units are neither type and do not show abilities.
+
 
 ## Debug
 
