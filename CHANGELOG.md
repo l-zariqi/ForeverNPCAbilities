@@ -1,3 +1,7 @@
+## Version 1.2.0
+
+- Added a Hide the "Known abilities" line checkbox to the addon options
+
 ## Version 1.1.0
 
 - Added configurable colors for ability names, descriptions, and details, with a button to restore the original colors.
