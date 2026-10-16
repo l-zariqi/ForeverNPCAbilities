@@ -1,6 +1,9 @@
 local addonName, addon = ...
 
 local descriptionKeyBinding = "CLICK ForeverNPCAbilitiesDescriptionKeyButton:LeftButton"
+local defaultSpellIconSize = 16
+local minimumSpellIconSize = 8
+local maximumSpellIconSize = 32
 
 local defaultAbilityColors = {
     name = {r = 1, g = 1, b = 1},
@@ -27,6 +30,14 @@ local function getDatabase()
     if type(ForeverNPCAbilitiesDB.hideKnownAbilitiesLine) ~= "boolean" then
         ForeverNPCAbilitiesDB.hideKnownAbilitiesLine = false
     end
+    if type(ForeverNPCAbilitiesDB.spellIconSize) ~= "number" then
+        ForeverNPCAbilitiesDB.spellIconSize = defaultSpellIconSize
+    else
+        ForeverNPCAbilitiesDB.spellIconSize = math.max(
+            minimumSpellIconSize,
+            math.min(maximumSpellIconSize, math.floor(ForeverNPCAbilitiesDB.spellIconSize + 0.5))
+        )
+    end
     if ForeverNPCAbilitiesDB.hotkeyMode ~= "TOGGLE" then
         ForeverNPCAbilitiesDB.hotkeyMode = "HOLD"
     end
@@ -41,6 +52,9 @@ local function getDatabase()
     end
     if ForeverNPCAbilitiesDB.detailDisplayMode ~= "KEY" and ForeverNPCAbilitiesDB.detailDisplayMode ~= "NEVER" then
         ForeverNPCAbilitiesDB.detailDisplayMode = "ALWAYS"
+    end
+    if ForeverNPCAbilitiesDB.detailLayout ~= "INLINE" and ForeverNPCAbilitiesDB.detailLayout ~= "UNDER" then
+        ForeverNPCAbilitiesDB.detailLayout = "UNDER"
     end
     for _, key in ipairs({"range", "castTime", "spellSchool"}) do
         if type(ForeverNPCAbilitiesDB.details[key]) ~= "boolean" then
@@ -148,6 +162,24 @@ end
 local optionsPanel = CreateFrame("Frame")
 optionsPanel.name = "Forever NPC Abilities"
 
+local optionsScrollFrame = CreateFrame("ScrollFrame", nil, optionsPanel, "UIPanelScrollFrameTemplate")
+optionsScrollFrame:SetPoint("TOPLEFT", optionsPanel, "TOPLEFT", 0, 0)
+optionsScrollFrame:SetPoint("BOTTOMRIGHT", optionsPanel, "BOTTOMRIGHT", -26, 0)
+optionsScrollFrame:EnableMouseWheel(true)
+optionsScrollFrame:SetScript("OnMouseWheel", function(self, delta)
+    local scrollRange = self:GetVerticalScrollRange()
+    local scrollStep = 32
+    local scrollPosition = self:GetVerticalScroll() - delta * scrollStep
+    self:SetVerticalScroll(math.max(0, math.min(scrollRange, scrollPosition)))
+end)
+
+local contentPanel = CreateFrame("Frame")
+contentPanel:SetHeight(800)
+optionsScrollFrame:SetScrollChild(contentPanel)
+optionsScrollFrame:SetScript("OnSizeChanged", function(self, width)
+    contentPanel:SetWidth(width)
+end)
+
 local function setOptionTooltip(frame, title, text)
     frame:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -160,17 +192,17 @@ local function setOptionTooltip(frame, title, text)
     end)
 end
 
-local title = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+local title = contentPanel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
 title:SetPoint("TOPLEFT", 16, -16)
 title:SetText("Forever NPC Abilities")
 
-local description = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+local description = contentPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
 description:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -12)
 description:SetWidth(580)
 description:SetJustifyH("LEFT")
 description:SetText("Set a key to hold while hovering over an NPC to show ability descriptions.")
 
-local enabledCheck = CreateFrame("CheckButton", nil, optionsPanel, "InterfaceOptionsCheckButtonTemplate")
+local enabledCheck = CreateFrame("CheckButton", nil, contentPanel, "InterfaceOptionsCheckButtonTemplate")
 enabledCheck:SetPoint("TOPLEFT", description, "BOTTOMLEFT", -4, -16)
 enabledCheck.Text:SetText("Enable NPC ability tooltips")
 enabledCheck.Text:SetTextColor(1, 1, 1)
@@ -182,7 +214,7 @@ enabledCheck:SetScript("OnClick", function(self)
     getDatabase().enabled = self:GetChecked()
 end)
 
-local alwaysShowDescriptionsCheck = CreateFrame("CheckButton", nil, optionsPanel, "InterfaceOptionsCheckButtonTemplate")
+local alwaysShowDescriptionsCheck = CreateFrame("CheckButton", nil, contentPanel, "InterfaceOptionsCheckButtonTemplate")
 alwaysShowDescriptionsCheck:SetPoint("TOPLEFT", enabledCheck, "BOTTOMLEFT", 0, -4)
 alwaysShowDescriptionsCheck.Text:SetText("Always show ability descriptions")
 alwaysShowDescriptionsCheck.Text:SetTextColor(1, 1, 1)
@@ -209,11 +241,11 @@ refreshCurrentTooltip = function()
     end
 end
 
-local unitTypesLabel = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+local unitTypesLabel = contentPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 unitTypesLabel:SetPoint("TOPLEFT", alwaysShowDescriptionsCheck, "BOTTOMLEFT", 4, -12)
 unitTypesLabel:SetText("Show abilities for")
 
-local enemyUnitsCheck = CreateFrame("CheckButton", nil, optionsPanel, "InterfaceOptionsCheckButtonTemplate")
+local enemyUnitsCheck = CreateFrame("CheckButton", nil, contentPanel, "InterfaceOptionsCheckButtonTemplate")
 enemyUnitsCheck:SetPoint("TOPLEFT", unitTypesLabel, "BOTTOMLEFT", -4, -4)
 enemyUnitsCheck.Text:SetText("Enemy units")
 enemyUnitsCheck.Text:SetTextColor(1, 1, 1)
@@ -226,7 +258,7 @@ enemyUnitsCheck:SetScript("OnClick", function(self)
     refreshCurrentTooltip()
 end)
 
-local friendlyUnitsCheck = CreateFrame("CheckButton", nil, optionsPanel, "InterfaceOptionsCheckButtonTemplate")
+local friendlyUnitsCheck = CreateFrame("CheckButton", nil, contentPanel, "InterfaceOptionsCheckButtonTemplate")
 friendlyUnitsCheck:SetPoint("TOPLEFT", enemyUnitsCheck, "BOTTOMLEFT", 0, -4)
 friendlyUnitsCheck.Text:SetText("Friendly units")
 friendlyUnitsCheck.Text:SetTextColor(1, 1, 1)
@@ -239,7 +271,7 @@ friendlyUnitsCheck:SetScript("OnClick", function(self)
     refreshCurrentTooltip()
 end)
 
-local hideKnownAbilitiesLineCheck = CreateFrame("CheckButton", nil, optionsPanel, "InterfaceOptionsCheckButtonTemplate")
+local hideKnownAbilitiesLineCheck = CreateFrame("CheckButton", nil, contentPanel, "InterfaceOptionsCheckButtonTemplate")
 hideKnownAbilitiesLineCheck:SetPoint("TOPLEFT", friendlyUnitsCheck, "BOTTOMLEFT", 0, -4)
 hideKnownAbilitiesLineCheck.Text:SetText("Hide the \"Known abilities\" line")
 hideKnownAbilitiesLineCheck.Text:SetTextColor(1, 1, 1)
@@ -252,11 +284,11 @@ hideKnownAbilitiesLineCheck:SetScript("OnClick", function(self)
     refreshCurrentTooltip()
 end)
 
-local hotkeyModeLabel = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+local hotkeyModeLabel = contentPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 hotkeyModeLabel:SetPoint("TOPLEFT", hideKnownAbilitiesLineCheck, "BOTTOMLEFT", 4, -8)
 hotkeyModeLabel:SetText("Hotkey mode")
 
-local hotkeyModeDropdown = CreateFrame("Frame", "ForeverNPCAbilitiesHotkeyModeDropdown", optionsPanel, "UIDropDownMenuTemplate")
+local hotkeyModeDropdown = CreateFrame("Frame", "ForeverNPCAbilitiesHotkeyModeDropdown", contentPanel, "UIDropDownMenuTemplate")
 hotkeyModeDropdown:SetPoint("TOPLEFT", hotkeyModeLabel, "BOTTOMLEFT", -16, -4)
 UIDropDownMenu_SetWidth(hotkeyModeDropdown, 140)
 setOptionTooltip(hotkeyModeDropdown, "Hotkey mode", "Hold mode shows descriptions only while the key is held. Toggle mode switches descriptions on or off each time the key is pressed.")
@@ -292,7 +324,7 @@ hotkeyModeDropdown:SetScript("OnShow", function(self)
     setHotkeyModeText()
 end)
 
-local bindingButton = CreateFrame("Button", nil, optionsPanel, "UIPanelButtonTemplate")
+local bindingButton = CreateFrame("Button", nil, contentPanel, "UIPanelButtonTemplate")
 bindingButton:SetSize(240, 24)
 bindingButton:SetPoint("TOPLEFT", hotkeyModeDropdown, "BOTTOMLEFT", 16, -8)
 bindingButton:RegisterForClicks("LeftButtonUp", "RightButtonUp")
@@ -359,17 +391,17 @@ bindingButton:SetScript("OnClick", function(self, mouseButton)
     end)
 end)
 
-local bindingHelp = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+local bindingHelp = contentPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
 bindingHelp:SetPoint("TOPLEFT", bindingButton, "BOTTOMLEFT", 0, -8)
 bindingHelp:SetWidth(580)
 bindingHelp:SetJustifyH("LEFT")
 bindingHelp:SetText("Click to assign a key, key combination, or modifier by itself. Hold it while hovering over an NPC to reveal descriptions. Right-click to clear it.")
 
-local detailsLabel = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+local detailsLabel = contentPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 detailsLabel:SetPoint("TOPLEFT", bindingHelp, "BOTTOMLEFT", 0, -18)
 detailsLabel:SetText("Ability details")
 
-local detailDisplayDropdown = CreateFrame("Frame", "ForeverNPCAbilitiesDetailDisplayDropdown", optionsPanel, "UIDropDownMenuTemplate")
+local detailDisplayDropdown = CreateFrame("Frame", "ForeverNPCAbilitiesDetailDisplayDropdown", contentPanel, "UIDropDownMenuTemplate")
 detailDisplayDropdown:SetPoint("TOPLEFT", detailsLabel, "BOTTOMLEFT", -16, -4)
 UIDropDownMenu_SetWidth(detailDisplayDropdown, 190)
 setOptionTooltip(detailDisplayDropdown, "Ability detail display", "Choose whether enabled range, cast time, and spell school details are always shown, shown while the description key is active, or hidden.")
@@ -409,6 +441,40 @@ detailDisplayDropdown:SetScript("OnShow", function()
     setDetailDisplayText()
 end)
 
+local detailLayoutDropdown = CreateFrame("Frame", "ForeverNPCAbilitiesDetailLayoutDropdown", contentPanel, "UIDropDownMenuTemplate")
+detailLayoutDropdown:SetPoint("TOPLEFT", detailDisplayDropdown, "BOTTOMLEFT", 0, -4)
+UIDropDownMenu_SetWidth(detailLayoutDropdown, 190)
+setOptionTooltip(detailLayoutDropdown, "Ability detail layout", "Choose whether range, cast time, and spell school appear on the ability name line or underneath it.")
+
+local function setDetailLayoutText()
+    local layout = getDatabase().detailLayout
+    UIDropDownMenu_SetSelectedValue(detailLayoutDropdown, layout)
+    UIDropDownMenu_SetText(detailLayoutDropdown, layout == "INLINE" and "Inline" or "Under name")
+end
+
+UIDropDownMenu_Initialize(detailLayoutDropdown, function(_, level)
+    local layouts = {
+        {value = "UNDER", text = "Under name"},
+        {value = "INLINE", text = "Inline"},
+    }
+    for _, layout in ipairs(layouts) do
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = layout.text
+        info.value = layout.value
+        info.checked = getDatabase().detailLayout == layout.value
+        info.func = function(self)
+            getDatabase().detailLayout = self.value
+            setDetailLayoutText()
+            refreshCurrentTooltip()
+        end
+        UIDropDownMenu_AddButton(info, level)
+    end
+end)
+
+detailLayoutDropdown:SetScript("OnShow", function()
+    setDetailLayoutText()
+end)
+
 local detailOptions = {
     {key = "range", label = "Show Range"},
     {key = "castTime", label = "Show Cast time"},
@@ -417,8 +483,8 @@ local detailOptions = {
 
 for index, option in ipairs(detailOptions) do
     local optionKey = option.key
-    local checkbox = CreateFrame("CheckButton", nil, optionsPanel, "InterfaceOptionsCheckButtonTemplate")
-    checkbox:SetPoint("TOPLEFT", detailDisplayDropdown, "BOTTOMLEFT", 16, -4 - (index - 1) * 28)
+    local checkbox = CreateFrame("CheckButton", nil, contentPanel, "InterfaceOptionsCheckButtonTemplate")
+    checkbox:SetPoint("TOPLEFT", detailLayoutDropdown, "BOTTOMLEFT", 16, -4 - (index - 1) * 28)
     checkbox.Text:SetText(option.label)
     checkbox.Text:SetTextColor(1, 1, 1)
     local detailTooltips = {
@@ -436,8 +502,8 @@ for index, option in ipairs(detailOptions) do
     end)
 end
 
-local colorLabel = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-colorLabel:SetPoint("TOPLEFT", detailDisplayDropdown, "BOTTOMLEFT", 4, -4 - #detailOptions * 28 - 12)
+local colorLabel = contentPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+colorLabel:SetPoint("TOPLEFT", detailLayoutDropdown, "BOTTOMLEFT", 4, -4 - #detailOptions * 28 - 12)
 colorLabel:SetText("Tooltip colors")
 
 local function updateColorSwatch(button, colorKey)
@@ -488,12 +554,12 @@ end
 
 local colorColumnWidth = 190
 for index, option in ipairs(colorOptions) do
-    local label = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    local label = contentPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     label:SetText(option.label)
     label:SetTextColor(1, 1, 1)
     label:SetPoint("TOPLEFT", colorLabel, "BOTTOMLEFT", (index - 1) * colorColumnWidth, -8)
 
-    local swatch = CreateFrame("Button", nil, optionsPanel)
+    local swatch = CreateFrame("Button", nil, contentPanel)
     swatch:SetSize(16, 16)
     swatch:SetPoint("LEFT", label, "RIGHT", 6, 0)
     swatch:SetNormalTexture("Interface\\ChatFrame\\ChatFrameColorSwatch")
@@ -510,7 +576,7 @@ for index, option in ipairs(colorOptions) do
     colorSwatches[option.key] = swatch
 end
 
-local resetColorsButton = CreateFrame("Button", nil, optionsPanel, "UIPanelButtonTemplate")
+local resetColorsButton = CreateFrame("Button", nil, contentPanel, "UIPanelButtonTemplate")
 resetColorsButton:SetSize(180, 24)
 resetColorsButton:SetPoint("TOPLEFT", colorLabel, "BOTTOMLEFT", 0, -36)
 resetColorsButton:SetText("Reset colors to default")
@@ -522,9 +588,54 @@ resetColorsButton:SetScript("OnClick", function()
     end
 end)
 
+local iconSizeLabel = contentPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+iconSizeLabel:SetPoint("TOPLEFT", resetColorsButton, "BOTTOMLEFT", 0, -16)
+iconSizeLabel:SetText("Spell icon size")
+
+local iconSizeValue = contentPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+iconSizeValue:SetPoint("LEFT", iconSizeLabel, "RIGHT", 8, 0)
+
+local iconSizeSlider = CreateFrame("Slider", "ForeverNPCAbilitiesIconSizeSlider", contentPanel, "OptionsSliderTemplate")
+iconSizeSlider:SetPoint("TOPLEFT", iconSizeLabel, "BOTTOMLEFT", 0, -12)
+iconSizeSlider:SetWidth(240)
+iconSizeSlider:SetMinMaxValues(minimumSpellIconSize, maximumSpellIconSize)
+iconSizeSlider:SetValueStep(1)
+iconSizeSlider:SetObeyStepOnDrag(true)
+iconSizeSlider.Low:SetText(tostring(minimumSpellIconSize))
+iconSizeSlider.High:SetText(tostring(maximumSpellIconSize))
+iconSizeSlider.Text:SetText("")
+setOptionTooltip(iconSizeSlider, "Spell icon size", "Choose the size of spell icons shown beside abilities in NPC tooltips.")
+
+local function updateIconSizeValue(size)
+    iconSizeValue:SetText(string.format("%d px", size))
+end
+
+iconSizeSlider:SetScript("OnShow", function(self)
+    local size = getDatabase().spellIconSize
+    self:SetValue(size)
+    updateIconSizeValue(size)
+end)
+iconSizeSlider:SetScript("OnValueChanged", function(self, value)
+    local size = math.floor(value + 0.5)
+    getDatabase().spellIconSize = size
+    updateIconSizeValue(size)
+    refreshCurrentTooltip()
+end)
+
+local resetIconSizeButton = CreateFrame("Button", nil, contentPanel, "UIPanelButtonTemplate")
+resetIconSizeButton:SetSize(180, 24)
+resetIconSizeButton:SetPoint("LEFT", iconSizeSlider, "RIGHT", 20, 0)
+resetIconSizeButton:SetText("Reset to default")
+setOptionTooltip(resetIconSizeButton, "Reset spell icon size", "Restore the default spell icon size of 16 pixels.")
+resetIconSizeButton:SetScript("OnClick", function()
+    iconSizeSlider:SetValue(defaultSpellIconSize)
+end)
+
 optionsPanel:SetScript("OnShow", function()
+    contentPanel:SetWidth(optionsScrollFrame:GetWidth())
     setHotkeyModeText()
     setDetailDisplayText()
+    setDetailLayoutText()
 end)
 
 local category

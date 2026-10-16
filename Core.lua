@@ -1,5 +1,8 @@
 local addonName, addon = ...
 local descriptionKeyBinding = "CLICK ForeverNPCAbilitiesDescriptionKeyButton:LeftButton"
+local defaultSpellIconSize = 16
+local minimumSpellIconSize = 8
+local maximumSpellIconSize = 32
 
 local defaultAbilityColors = {
     name = {r = 1, g = 1, b = 1},
@@ -160,24 +163,66 @@ local function getDescriptionKeyLabel()
     return key and formatBinding(key) or nil
 end
 
+local function formatInlineDetail(value)
+    return tostring(value):gsub("%a+", function(word)
+        local unit = string.lower(word)
+        if unit == "yard" or unit == "yards" then
+            return "yds"
+        elseif unit == "second" or unit == "seconds" then
+            return "s"
+        end
+        return word
+    end):gsub("%s+$", "")
+end
+
 local function addAbilityLine(tooltip, ability)
-    local icon = ability.texture and ("|T" .. tostring(ability.texture) .. ":16:16:0:0:64:64:4:60:4:60|t ") or ""
-    local nameR, nameG, nameB = getAbilityColor("name")
-    tooltip:AddLine(icon .. ability.name, nameR, nameG, nameB, true)
+    local iconSize = database.spellIconSize or defaultSpellIconSize
+    iconSize = math.max(minimumSpellIconSize, math.min(maximumSpellIconSize, iconSize))
+    local icon = ability.texture and ("|T" .. tostring(ability.texture) .. ":" .. iconSize .. ":" .. iconSize .. ":0:0:64:64:4:60:4:60|t ") or ""
     local details = database.details
     local showDetails = database.detailDisplayMode == "ALWAYS"
         or (database.detailDisplayMode == "KEY" and state.descriptionKeyDown)
     local detailR, detailG, detailB = getAbilityColor("details")
+    local inlineDetails = {}
+    local underneathDetails = {}
     if details and showDetails then
         if details.range and ability.range and ability.range ~= "" then
-            tooltip:AddLine("Range: " .. ability.range, detailR, detailG, detailB, true)
+            if database.detailLayout == "INLINE" then
+                inlineDetails[#inlineDetails + 1] = formatInlineDetail(ability.range)
+            else
+                underneathDetails[#underneathDetails + 1] = "Range: " .. ability.range
+            end
         end
         if details.castTime and ability.castTime and ability.castTime ~= "" then
-            tooltip:AddLine("Cast time: " .. ability.castTime, detailR, detailG, detailB, true)
+            if database.detailLayout == "INLINE" then
+                inlineDetails[#inlineDetails + 1] = formatInlineDetail(ability.castTime)
+            else
+                underneathDetails[#underneathDetails + 1] = "Cast time: " .. ability.castTime
+            end
         end
         if details.spellSchool and ability.spellSchool and ability.spellSchool ~= "" then
-            tooltip:AddLine("Spell school: " .. ability.spellSchool, detailR, detailG, detailB, true)
+            if database.detailLayout == "INLINE" then
+                inlineDetails[#inlineDetails + 1] = ability.spellSchool
+            else
+                underneathDetails[#underneathDetails + 1] = "Spell school: " .. ability.spellSchool
+            end
         end
+    end
+    local nameR, nameG, nameB = getAbilityColor("name")
+    local nameText = icon .. ability.name
+    if #inlineDetails > 0 then
+        nameText = nameText
+            .. string.format(
+                " |cFF%02X%02X%02X(%s)|r",
+                math.floor(detailR * 255 + 0.5),
+                math.floor(detailG * 255 + 0.5),
+                math.floor(detailB * 255 + 0.5),
+                table.concat(inlineDetails, ", ")
+            )
+    end
+    tooltip:AddLine(nameText, nameR, nameG, nameB, true)
+    for _, detail in ipairs(underneathDetails) do
+        tooltip:AddLine(detail, detailR, detailG, detailB, true)
     end
     local descriptionR, descriptionG, descriptionB = getAbilityColor("description")
     if (database.alwaysShowDescriptions or state.descriptionKeyDown)
@@ -501,6 +546,14 @@ eventFrame:SetScript("OnEvent", function(_, _, loadedAddon)
     if type(database.hideKnownAbilitiesLine) ~= "boolean" then
         database.hideKnownAbilitiesLine = false
     end
+    if type(database.spellIconSize) ~= "number" then
+        database.spellIconSize = defaultSpellIconSize
+    else
+        database.spellIconSize = math.max(
+            minimumSpellIconSize,
+            math.min(maximumSpellIconSize, math.floor(database.spellIconSize + 0.5))
+        )
+    end
     if type(database.details) ~= "table" then
         database.details = {}
     end
@@ -509,6 +562,9 @@ eventFrame:SetScript("OnEvent", function(_, _, loadedAddon)
     end
     if database.detailDisplayMode ~= "KEY" and database.detailDisplayMode ~= "NEVER" then
         database.detailDisplayMode = "ALWAYS"
+    end
+    if database.detailLayout ~= "INLINE" and database.detailLayout ~= "UNDER" then
+        database.detailLayout = "UNDER"
     end
     for _, key in ipairs({"range", "castTime", "spellSchool"}) do
         if type(database.details[key]) ~= "boolean" then
