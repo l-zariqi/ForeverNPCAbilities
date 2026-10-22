@@ -38,7 +38,5 @@ Replace `12345` and the example names with NPC and ability data you have permiss
 ## Debug
 
 - Use `/fna status`, `/fna debug`, `/fna on`, `/fna off`, or `/fna toggle` to check and control tooltip output.
-
 - `/fna status` reports whether the core and tooltip hook loaded.
-
 - `/fna debug` adds the hovered NPC ID and catalog counts to its tooltip. The setting is saved between sessions.
