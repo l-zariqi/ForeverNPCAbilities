@@ -3,15 +3,83 @@ local descriptionKeyBinding = "CLICK ForeverNPCAbilitiesDescriptionKeyButton:Lef
 local defaultSpellIconSize = 16
 local minimumSpellIconSize = 8
 local maximumSpellIconSize = 32
+local abilityIconBorderThickness = 1
 
 local defaultAbilityColors = {
-    name = {r = 1, g = 1, b = 1},
-    description = {r = 1, g = 0.82, b = 0},
+    name = {r = 1, g = 0.82, b = 0},
+    description = {r = 1, g = 1, b = 1},
     details = {r = 0.85, g = 0.85, b = 0.85},
+    poison = {r = 0, g = 1, b = 0},
+    curse = {r = 0.65, g = 0.35, b = 1},
+    disease = {r = 0.75, g = 0.48, b = 0.24},
+    magic = {r = 0.35, g = 0.65, b = 1},
+    physical = {r = 1, g = 0.25, b = 0.25},
+}
+
+local abilityNameColorByDispelType = {
+    poison = "poison",
+    curse = "curse",
+    disease = "disease",
+    magic = "magic",
 }
 
 local database
 local state = addon.State
+local abilityIconBorders = {}
+
+local function hideAbilityIconBorders()
+    for _, border in pairs(abilityIconBorders) do
+        border:Hide()
+    end
+end
+
+local function addAbilityIconBorder(tooltip, lineIndex, iconSize, r, g, b)
+    local tooltipName = tooltip:GetName()
+    local line = tooltipName and _G[tooltipName .. "TextLeft" .. lineIndex]
+    if not line then
+        return
+    end
+
+    local border = abilityIconBorders[lineIndex]
+    if not border then
+        border = CreateFrame("Frame", nil, tooltip)
+        border:SetFrameLevel(tooltip:GetFrameLevel() + 1)
+        border:SetSize(iconSize, iconSize)
+
+        local function createEdge(point, relativePoint, oppositePoint, oppositeRelativePoint)
+            local edge = border:CreateTexture(nil, "OVERLAY")
+            edge:SetTexture("Interface\\Buttons\\WHITE8X8")
+            edge:SetVertexColor(r, g, b)
+            edge:SetPoint(point, border, relativePoint)
+            edge:SetPoint(oppositePoint, border, oppositeRelativePoint)
+            return edge
+        end
+
+        border.edges = {
+            createEdge("TOPLEFT", "TOPLEFT", "TOPRIGHT", "TOPRIGHT"),
+            createEdge("BOTTOMLEFT", "BOTTOMLEFT", "BOTTOMRIGHT", "BOTTOMRIGHT"),
+            createEdge("TOPLEFT", "TOPLEFT", "BOTTOMLEFT", "BOTTOMLEFT"),
+            createEdge("TOPRIGHT", "TOPRIGHT", "BOTTOMRIGHT", "BOTTOMRIGHT"),
+        }
+        border.edges[1]:SetHeight(abilityIconBorderThickness)
+        border.edges[2]:SetHeight(abilityIconBorderThickness)
+        border.edges[3]:SetWidth(abilityIconBorderThickness)
+        border.edges[4]:SetWidth(abilityIconBorderThickness)
+        abilityIconBorders[lineIndex] = border
+    end
+
+    border:SetSize(iconSize, iconSize)
+    for _, edge in ipairs(border.edges) do
+        edge:SetVertexColor(r, g, b)
+    end
+    border:ClearAllPoints()
+    border:SetPoint("TOPLEFT", line, "TOPLEFT")
+    border:Show()
+end
+
+if GameTooltip:HasScript("OnHide") then
+    GameTooltip:HookScript("OnHide", hideAbilityIconBorders)
+end
 
 local function getAbilityColor(colorKey)
     if type(database) ~= "table" then
@@ -21,6 +89,26 @@ local function getAbilityColor(colorKey)
 
     if type(database.colors) ~= "table" then
         database.colors = {}
+    end
+    local previousNameColor = database.colors.name
+    if type(previousNameColor) == "table"
+        and previousNameColor.r == 1
+        and previousNameColor.g == 1
+        and previousNameColor.b == 1
+    then
+        previousNameColor.r = defaultAbilityColors.name.r
+        previousNameColor.g = defaultAbilityColors.name.g
+        previousNameColor.b = defaultAbilityColors.name.b
+    end
+    local previousDescriptionColor = database.colors.description
+    if type(previousDescriptionColor) == "table"
+        and previousDescriptionColor.r == 1
+        and previousDescriptionColor.g == 0.82
+        and previousDescriptionColor.b == 0
+    then
+        previousDescriptionColor.r = defaultAbilityColors.description.r
+        previousDescriptionColor.g = defaultAbilityColors.description.g
+        previousDescriptionColor.b = defaultAbilityColors.description.b
     end
 
     for key, defaultColor in pairs(defaultAbilityColors) do
@@ -137,6 +225,32 @@ local function getSpellSchool(spellID)
     return schoolNameFromMask(mask)
 end
 
+local function getSpellEffectData(spellID)
+    local englishSpells = ForeverNPCAbilitiesSpellData and ForeverNPCAbilitiesSpellData.en
+    return englishSpells and englishSpells[spellID]
+end
+
+local function getAbilityNameColorKey(ability)
+    local mechanic = type(ability.mechanic) == "string" and string.lower(ability.mechanic) or ""
+    local description = type(ability.description) == "string" and string.lower(ability.description) or ""
+    if mechanic == "bleeding" or description:find("bleed", 1, true) then
+        return "physical"
+    end
+
+    local dispelType = type(ability.dispelType) == "string" and string.lower(ability.dispelType) or ""
+    local colorKey = abilityNameColorByDispelType[dispelType]
+    if colorKey then
+        return colorKey
+    end
+
+    local spellSchool = type(ability.spellSchool) == "string" and string.lower(ability.spellSchool) or ""
+    if mechanic ~= "" and spellSchool:find("physical", 1, true) then
+        return "physical"
+    end
+
+    return "name"
+end
+
 local function formatBinding(binding)
     local parts = {}
     local labels = {
@@ -167,7 +281,7 @@ local function formatInlineDetail(value)
     return tostring(value):gsub("%a+", function(word)
         local unit = string.lower(word)
         if unit == "yard" or unit == "yards" then
-            return "yds"
+            return "yd"
         elseif unit == "second" or unit == "seconds" then
             return "s"
         end
@@ -207,8 +321,16 @@ local function addAbilityLine(tooltip, ability)
                 underneathDetails[#underneathDetails + 1] = "Spell school: " .. ability.spellSchool
             end
         end
+        if details.dispelType and ability.dispelType and ability.dispelType ~= "" then
+            if database.detailLayout == "INLINE" then
+                inlineDetails[#inlineDetails + 1] = ability.dispelType
+            else
+                underneathDetails[#underneathDetails + 1] = "Dispel type: " .. ability.dispelType
+            end
+        end
     end
-    local nameR, nameG, nameB = getAbilityColor("name")
+    local nameColorKey = database.colorAbilityNames and getAbilityNameColorKey(ability) or "name"
+    local nameR, nameG, nameB = getAbilityColor(nameColorKey)
     local nameText = icon .. ability.name
     if #inlineDetails > 0 then
         nameText = nameText
@@ -221,6 +343,9 @@ local function addAbilityLine(tooltip, ability)
             )
     end
     tooltip:AddLine(nameText, nameR, nameG, nameB, true)
+    if icon ~= "" and database.showAbilityIconBorders then
+        addAbilityIconBorder(tooltip, tooltip:NumLines(), iconSize, nameR, nameG, nameB)
+    end
     for _, detail in ipairs(underneathDetails) do
         tooltip:AddLine(detail, detailR, detailG, detailB, true)
     end
@@ -248,6 +373,8 @@ local function appendAbilities(tooltip)
     if tooltip ~= GameTooltip then
         return
     end
+
+    hideAbilityIconBorders()
 
     if not database or not database.enabled then
         return
@@ -280,8 +407,9 @@ local function appendAbilities(tooltip)
         end
         local normalizedName = string.lower(name)
         local existing = knownNames[normalizedName]
+        metadata = metadata or {}
+        local effectData = getSpellEffectData(spellID)
         if not existing then
-            metadata = metadata or {}
             existing = {
                 name = name,
                 spellID = spellID,
@@ -290,17 +418,20 @@ local function appendAbilities(tooltip)
                 range = metadata.range,
                 castTime = metadata.castTime,
                 spellSchool = metadata.spellSchool or getSpellSchool(spellID),
+                dispelType = metadata.dispelType or (effectData and effectData.dispel_type),
+                mechanic = metadata.mechanic or (effectData and effectData.mechanic),
             }
             knownNames[normalizedName] = existing
             knownAbilities[#knownAbilities + 1] = existing
         else
-            metadata = metadata or {}
             existing.description = existing.description or description
             existing.spellID = existing.spellID or spellID
             existing.texture = existing.texture or getSpellTexture(spellID)
             existing.range = existing.range or metadata.range
             existing.castTime = existing.castTime or metadata.castTime
             existing.spellSchool = existing.spellSchool or metadata.spellSchool or getSpellSchool(spellID)
+            existing.dispelType = existing.dispelType or metadata.dispelType or (effectData and effectData.dispel_type)
+            existing.mechanic = existing.mechanic or metadata.mechanic or (effectData and effectData.mechanic)
         end
     end
 
@@ -335,6 +466,8 @@ local function appendAbilities(tooltip)
                     range = spell and spell.range,
                     castTime = spell and spell.cast_time,
                     spellSchool = getSpellSchool(spellID),
+                    dispelType = spell and spell.dispel_type,
+                    mechanic = spell and spell.mechanic,
                 }
             )
         end
@@ -346,7 +479,8 @@ local function appendAbilities(tooltip)
 
     if hasKnownAbilities then
         if not database.hideKnownAbilitiesLine then
-            tooltip:AddLine("Known abilities:", 1, 0.82, 0, true)
+            local detailsR, detailsG, detailsB = getAbilityColor("details")
+            tooltip:AddLine("Known abilities:", detailsR, detailsG, detailsB, true)
         end
         for _, ability in ipairs(knownAbilities) do
             addAbilityLine(tooltip, ability)
@@ -360,12 +494,15 @@ local function appendAbilities(tooltip)
             local normalizedName = type(spellName) == "string" and string.lower(spellName)
             if normalizedName and spellName ~= "" and not shownNames[normalizedName] then
                 local numericSpellID = tonumber(spellID)
+                local effectData = getSpellEffectData(numericSpellID)
                 newObservedSpells[#newObservedSpells + 1] = {
                     name = spellName,
                     spellID = numericSpellID,
                     description = getSpellDescription(numericSpellID),
                     texture = getSpellTexture(numericSpellID),
                     spellSchool = getSpellSchool(numericSpellID),
+                    dispelType = effectData and effectData.dispel_type,
+                    mechanic = effectData and effectData.mechanic,
                 }
                 shownNames[normalizedName] = true
             end
@@ -406,7 +543,12 @@ local function appendAbilities(tooltip)
 
     local hasAbilities = hasKnownAbilities or #newObservedSpells > 0
     local detailsNeedKey = database.detailDisplayMode == "KEY"
-        and (database.details.range or database.details.castTime or database.details.spellSchool)
+        and (
+            database.details.range
+            or database.details.castTime
+            or database.details.spellSchool
+            or database.details.dispelType
+        )
     local descriptionKey = (not database.alwaysShowDescriptions or detailsNeedKey)
         and not state.descriptionKeyDown
         and getDescriptionKeyLabel()
@@ -439,6 +581,11 @@ end
 
 local descriptionKeyFrame = CreateFrame("Frame")
 local descriptionInputLatched = false
+local modifierKeys = {
+    CTRL = {LCTRL = true, RCTRL = true},
+    ALT = {LALT = true, RALT = true},
+    SHIFT = {LSHIFT = true, RSHIFT = true},
+}
 
 local function isDescriptionKeyDown()
     if database and database.descriptionModifier == "CTRL" then
@@ -506,12 +653,17 @@ descriptionKeyButton:SetScript("OnClick", activateDescriptionKey)
 descriptionKeyButton:Show()
 
 descriptionKeyFrame:RegisterEvent("MODIFIER_STATE_CHANGED")
-descriptionKeyFrame:SetScript("OnEvent", function(_, _, _, keyState)
+descriptionKeyFrame:SetScript("OnEvent", function(_, _, key, keyState)
     if not database or not database.descriptionModifier then
         return
     end
 
-    if keyState == 1 then
+    local configuredModifierKeys = modifierKeys[database.descriptionModifier]
+    if not configuredModifierKeys or not configuredModifierKeys[key] then
+        return
+    end
+
+    if keyState == 1 and isDescriptionKeyDown() then
         activateDescriptionKey()
     elseif keyState == 0 then
         updateDescriptionKeyState()
@@ -546,6 +698,12 @@ eventFrame:SetScript("OnEvent", function(_, _, loadedAddon)
     if type(database.hideKnownAbilitiesLine) ~= "boolean" then
         database.hideKnownAbilitiesLine = false
     end
+    if type(database.colorAbilityNames) ~= "boolean" then
+        database.colorAbilityNames = false
+    end
+    if type(database.showAbilityIconBorders) ~= "boolean" then
+        database.showAbilityIconBorders = true
+    end
     if type(database.spellIconSize) ~= "number" then
         database.spellIconSize = defaultSpellIconSize
     else
@@ -566,7 +724,7 @@ eventFrame:SetScript("OnEvent", function(_, _, loadedAddon)
     if database.detailLayout ~= "INLINE" and database.detailLayout ~= "UNDER" then
         database.detailLayout = "UNDER"
     end
-    for _, key in ipairs({"range", "castTime", "spellSchool"}) do
+    for _, key in ipairs({"range", "castTime", "spellSchool", "dispelType"}) do
         if type(database.details[key]) ~= "boolean" then
             database.details[key] = false
         end

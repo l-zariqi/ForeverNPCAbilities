@@ -6,9 +6,14 @@ local minimumSpellIconSize = 8
 local maximumSpellIconSize = 32
 
 local defaultAbilityColors = {
-    name = {r = 1, g = 1, b = 1},
-    description = {r = 1, g = 0.82, b = 0},
+    name = {r = 1, g = 0.82, b = 0},
+    description = {r = 1, g = 1, b = 1},
     details = {r = 0.85, g = 0.85, b = 0.85},
+    poison = {r = 0, g = 1, b = 0},
+    curse = {r = 0.65, g = 0.35, b = 1},
+    disease = {r = 0.75, g = 0.48, b = 0.24},
+    magic = {r = 0.35, g = 0.65, b = 1},
+    physical = {r = 1, g = 0.25, b = 0.25},
 }
 
 local function getDatabase()
@@ -30,6 +35,12 @@ local function getDatabase()
     if type(ForeverNPCAbilitiesDB.hideKnownAbilitiesLine) ~= "boolean" then
         ForeverNPCAbilitiesDB.hideKnownAbilitiesLine = false
     end
+    if type(ForeverNPCAbilitiesDB.colorAbilityNames) ~= "boolean" then
+        ForeverNPCAbilitiesDB.colorAbilityNames = false
+    end
+    if type(ForeverNPCAbilitiesDB.showAbilityIconBorders) ~= "boolean" then
+        ForeverNPCAbilitiesDB.showAbilityIconBorders = true
+    end
     if type(ForeverNPCAbilitiesDB.spellIconSize) ~= "number" then
         ForeverNPCAbilitiesDB.spellIconSize = defaultSpellIconSize
     else
@@ -50,13 +61,33 @@ local function getDatabase()
     if type(ForeverNPCAbilitiesDB.colors) ~= "table" then
         ForeverNPCAbilitiesDB.colors = {}
     end
+    local previousNameColor = ForeverNPCAbilitiesDB.colors.name
+    if type(previousNameColor) == "table"
+        and previousNameColor.r == 1
+        and previousNameColor.g == 1
+        and previousNameColor.b == 1
+    then
+        previousNameColor.r = defaultAbilityColors.name.r
+        previousNameColor.g = defaultAbilityColors.name.g
+        previousNameColor.b = defaultAbilityColors.name.b
+    end
+    local previousDescriptionColor = ForeverNPCAbilitiesDB.colors.description
+    if type(previousDescriptionColor) == "table"
+        and previousDescriptionColor.r == 1
+        and previousDescriptionColor.g == 0.82
+        and previousDescriptionColor.b == 0
+    then
+        previousDescriptionColor.r = defaultAbilityColors.description.r
+        previousDescriptionColor.g = defaultAbilityColors.description.g
+        previousDescriptionColor.b = defaultAbilityColors.description.b
+    end
     if ForeverNPCAbilitiesDB.detailDisplayMode ~= "KEY" and ForeverNPCAbilitiesDB.detailDisplayMode ~= "NEVER" then
         ForeverNPCAbilitiesDB.detailDisplayMode = "ALWAYS"
     end
     if ForeverNPCAbilitiesDB.detailLayout ~= "INLINE" and ForeverNPCAbilitiesDB.detailLayout ~= "UNDER" then
         ForeverNPCAbilitiesDB.detailLayout = "UNDER"
     end
-    for _, key in ipairs({"range", "castTime", "spellSchool"}) do
+    for _, key in ipairs({"range", "castTime", "spellSchool", "dispelType"}) do
         if type(ForeverNPCAbilitiesDB.details[key]) ~= "boolean" then
             ForeverNPCAbilitiesDB.details[key] = false
         end
@@ -271,21 +302,8 @@ friendlyUnitsCheck:SetScript("OnClick", function(self)
     refreshCurrentTooltip()
 end)
 
-local hideKnownAbilitiesLineCheck = CreateFrame("CheckButton", nil, contentPanel, "InterfaceOptionsCheckButtonTemplate")
-hideKnownAbilitiesLineCheck:SetPoint("TOPLEFT", friendlyUnitsCheck, "BOTTOMLEFT", 0, -4)
-hideKnownAbilitiesLineCheck.Text:SetText("Hide the \"Known abilities\" line")
-hideKnownAbilitiesLineCheck.Text:SetTextColor(1, 1, 1)
-setOptionTooltip(hideKnownAbilitiesLineCheck, "Hide the \"Known abilities\" line", "Hide the heading above cataloged abilities in unit tooltips.")
-hideKnownAbilitiesLineCheck:SetScript("OnShow", function(self)
-    self:SetChecked(getDatabase().hideKnownAbilitiesLine)
-end)
-hideKnownAbilitiesLineCheck:SetScript("OnClick", function(self)
-    getDatabase().hideKnownAbilitiesLine = self:GetChecked()
-    refreshCurrentTooltip()
-end)
-
 local hotkeyModeLabel = contentPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-hotkeyModeLabel:SetPoint("TOPLEFT", hideKnownAbilitiesLineCheck, "BOTTOMLEFT", 4, -8)
+hotkeyModeLabel:SetPoint("TOPLEFT", friendlyUnitsCheck, "BOTTOMLEFT", 4, -8)
 hotkeyModeLabel:SetText("Hotkey mode")
 
 local hotkeyModeDropdown = CreateFrame("Frame", "ForeverNPCAbilitiesHotkeyModeDropdown", contentPanel, "UIDropDownMenuTemplate")
@@ -479,6 +497,7 @@ local detailOptions = {
     {key = "range", label = "Show Range"},
     {key = "castTime", label = "Show Cast time"},
     {key = "spellSchool", label = "Show Spell school"},
+    {key = "dispelType", label = "Show Dispel type"},
 }
 
 for index, option in ipairs(detailOptions) do
@@ -491,6 +510,7 @@ for index, option in ipairs(detailOptions) do
         range = {"Show Range", "Include the ability's range in its tooltip when range details are enabled."},
         castTime = {"Show Cast time", "Include the ability's cast time in its tooltip when cast-time details are enabled."},
         spellSchool = {"Show Spell school", "Include the ability's spell school in its tooltip when spell-school details are enabled."},
+        dispelType = {"Show Dispel type", "Include the ability's dispel type, such as Magic, Poison, Curse, or Disease."},
     }
     setOptionTooltip(checkbox, detailTooltips[optionKey][1], detailTooltips[optionKey][2])
     checkbox:SetScript("OnShow", function(self)
@@ -502,8 +522,50 @@ for index, option in ipairs(detailOptions) do
     end)
 end
 
+local hideKnownAbilitiesLineCheck = CreateFrame("CheckButton", nil, contentPanel, "InterfaceOptionsCheckButtonTemplate")
+hideKnownAbilitiesLineCheck:SetPoint("TOPLEFT", detailLayoutDropdown, "BOTTOMLEFT", 16, -4 - #detailOptions * 28)
+hideKnownAbilitiesLineCheck.Text:SetText("Hide the \"Known abilities\" line")
+hideKnownAbilitiesLineCheck.Text:SetTextColor(1, 1, 1)
+setOptionTooltip(hideKnownAbilitiesLineCheck, "Hide the \"Known abilities\" line", "Hide the heading above cataloged abilities in unit tooltips.")
+hideKnownAbilitiesLineCheck:SetScript("OnShow", function(self)
+    self:SetChecked(getDatabase().hideKnownAbilitiesLine)
+end)
+hideKnownAbilitiesLineCheck:SetScript("OnClick", function(self)
+    getDatabase().hideKnownAbilitiesLine = self:GetChecked()
+    refreshCurrentTooltip()
+end)
+
+local appearanceOptions = {
+    {
+        key = "colorAbilityNames",
+        label = "Color ability names by effect type",
+        tooltip = "Use the poison, curse, disease, magic, and physical colors for ability names.",
+    },
+    {
+        key = "showAbilityIconBorders",
+        label = "Show colored borders around ability icons",
+        tooltip = "Outline each ability icon using the same color as its ability name.",
+    },
+}
+
+for index, option in ipairs(appearanceOptions) do
+    local optionKey = option.key
+    local checkbox = CreateFrame("CheckButton", nil, contentPanel, "InterfaceOptionsCheckButtonTemplate")
+    checkbox:SetPoint("TOPLEFT", detailLayoutDropdown, "BOTTOMLEFT", 16, -4 - (#detailOptions + index) * 28)
+    checkbox.Text:SetText(option.label)
+    checkbox.Text:SetTextColor(1, 1, 1)
+    setOptionTooltip(checkbox, option.label, option.tooltip)
+    checkbox:SetScript("OnShow", function(self)
+        self:SetChecked(getDatabase()[optionKey])
+    end)
+    checkbox:SetScript("OnClick", function(self)
+        getDatabase()[optionKey] = self:GetChecked()
+        refreshCurrentTooltip()
+    end)
+end
+
 local colorLabel = contentPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-colorLabel:SetPoint("TOPLEFT", detailLayoutDropdown, "BOTTOMLEFT", 4, -4 - #detailOptions * 28 - 12)
+colorLabel:SetPoint("TOPLEFT", detailLayoutDropdown, "BOTTOMLEFT", 4, -4 - (#detailOptions + 1 + #appearanceOptions) * 28 - 12)
 colorLabel:SetText("Tooltip colors")
 
 local function updateColorSwatch(button, colorKey)
@@ -516,6 +578,11 @@ local colorOptions = {
     {key = "name", label = "Ability name"},
     {key = "description", label = "Ability description"},
     {key = "details", label = "Ability details"},
+    {key = "poison", label = "Poison names"},
+    {key = "curse", label = "Curse names"},
+    {key = "disease", label = "Disease names"},
+    {key = "magic", label = "Magic names"},
+    {key = "physical", label = "Physical names"},
 }
 
 local function openAbilityColorPicker(colorKey, swatch)
@@ -553,11 +620,14 @@ local function openAbilityColorPicker(colorKey, swatch)
 end
 
 local colorColumnWidth = 190
+local colorColumnCount = 3
 for index, option in ipairs(colorOptions) do
     local label = contentPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     label:SetText(option.label)
     label:SetTextColor(1, 1, 1)
-    label:SetPoint("TOPLEFT", colorLabel, "BOTTOMLEFT", (index - 1) * colorColumnWidth, -8)
+    local row = math.floor((index - 1) / colorColumnCount)
+    local column = (index - 1) % colorColumnCount
+    label:SetPoint("TOPLEFT", colorLabel, "BOTTOMLEFT", column * colorColumnWidth, -8 - row * 28)
 
     local swatch = CreateFrame("Button", nil, contentPanel)
     swatch:SetSize(16, 16)
@@ -578,9 +648,10 @@ end
 
 local resetColorsButton = CreateFrame("Button", nil, contentPanel, "UIPanelButtonTemplate")
 resetColorsButton:SetSize(180, 24)
-resetColorsButton:SetPoint("TOPLEFT", colorLabel, "BOTTOMLEFT", 0, -36)
+local colorRowCount = math.ceil(#colorOptions / colorColumnCount)
+resetColorsButton:SetPoint("TOPLEFT", colorLabel, "BOTTOMLEFT", 0, -8 - colorRowCount * 28)
 resetColorsButton:SetText("Reset colors to default")
-setOptionTooltip(resetColorsButton, "Reset colors to default", "Restore the original white, gold, and light gray tooltip text colors.")
+setOptionTooltip(resetColorsButton, "Reset colors to default", "Restore the default tooltip text colors.")
 resetColorsButton:SetScript("OnClick", function()
     resetAbilityColors()
     for key, swatch in pairs(colorSwatches) do
