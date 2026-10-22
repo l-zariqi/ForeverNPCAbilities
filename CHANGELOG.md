@@ -1,9 +1,9 @@
 ## Version 1.4.0
-- Added configurable category colors for poison, curse, disease, magic, and physical bleed ability names.
-- Added a matching category-colored border around each ability icon.
-- Changed the default ability name color to yellow and description color to white.
+- Added configurable category colours for poison, curse, disease, magic, and physical bleed ability names.
+- Added a matching category-coloured border around each ability icon.
+- Changed the default ability name colour to yellow and description colour to white.
 - Added an optional dispel-type ability detail, separate from spell school.
-- Set effect-type ability name coloring to off by default.
+- Set effect-type ability name colouring to off by default.
 
 ## Version 1.3.0
 - Added an option to resize spell icons in NPC tooltips.
