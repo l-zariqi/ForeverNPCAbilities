@@ -1,9 +1,9 @@
 ## Interface: 16001
 ## Title: Forever NPC Abilities
-## Notes: Shows known abilities in enemy NPC tooltips.
+## Notes: Shows known abilities in NPC tooltips.
 ## Version: 1.4.0
 ## SavedVariables: ForeverNPCAbilitiesDB
-## IconTexture: Interface\AddOns\ForeverNPCAbilities\icon
+## IconTexture: Interface\Icons\INV_Misc_Book_04
 
 Abilities.lua
 Database/abilities.lua

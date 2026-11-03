@@ -386,10 +386,12 @@ local function appendAbilities(tooltip)
     end
 
     local isEnemy = UnitCanAttack("player", unit)
-    local isFriendly = UnitIsFriend("player", unit)
+    local isNeutral = not isEnemy and UnitReaction("player", unit) == 4
+    local isFriendly = not isNeutral and UnitIsFriend("player", unit)
     if (isEnemy and not database.showEnemyUnits)
         or (isFriendly and not database.showFriendlyUnits)
-        or (not isEnemy and not isFriendly)
+        or (isNeutral and not database.showNeutralUnits)
+        or (not isEnemy and not isFriendly and not isNeutral)
     then
         return
     end
@@ -694,6 +696,9 @@ eventFrame:SetScript("OnEvent", function(_, _, loadedAddon)
     end
     if type(database.showFriendlyUnits) ~= "boolean" then
         database.showFriendlyUnits = true
+    end
+    if type(database.showNeutralUnits) ~= "boolean" then
+        database.showNeutralUnits = true
     end
     if type(database.hideKnownAbilitiesLine) ~= "boolean" then
         database.hideKnownAbilitiesLine = false

@@ -15,7 +15,7 @@ Shows known NPC abilities and spell details to the in-game tooltip. It uses a bu
 
 ## Ability data
 
-The bundled catalog includes NPC abilities that appear immediately when you hover a listed NPC, whether it is friendly or hostile. Vehicle units are also supported when their NPC ID is present in the catalog. Automatic combat-log learning is disabled because this Forever client blocks the addon's combat-log event registration. Previously saved observations remain available, but NPCs missing from the catalog will not be learned automatically.
+The bundled catalog includes NPC abilities that appear immediately when you hover a listed NPC, whether it is friendly, neutral, or hostile. Neutral NPCs can be enabled or disabled separately in the options. Vehicle units are also supported when their NPC ID is present in the catalog. Automatic combat-log learning is disabled because this Forever client blocks the addon's combat-log event registration. Previously saved observations remain available, but NPCs missing from the catalog will not be learned automatically.
 
 The bundled catalog also includes the original NpcAbilities Classic NPC-to-spell mappings and English spell data. For NPCs in that catalog, abilities appear immediately when you hover them, with the spell icon and description where available.
 

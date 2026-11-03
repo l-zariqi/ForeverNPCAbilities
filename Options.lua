@@ -32,6 +32,9 @@ local function getDatabase()
     if type(ForeverNPCAbilitiesDB.showFriendlyUnits) ~= "boolean" then
         ForeverNPCAbilitiesDB.showFriendlyUnits = true
     end
+    if type(ForeverNPCAbilitiesDB.showNeutralUnits) ~= "boolean" then
+        ForeverNPCAbilitiesDB.showNeutralUnits = true
+    end
     if type(ForeverNPCAbilitiesDB.hideKnownAbilitiesLine) ~= "boolean" then
         ForeverNPCAbilitiesDB.hideKnownAbilitiesLine = false
     end
@@ -302,8 +305,21 @@ friendlyUnitsCheck:SetScript("OnClick", function(self)
     refreshCurrentTooltip()
 end)
 
+local neutralUnitsCheck = CreateFrame("CheckButton", nil, contentPanel, "InterfaceOptionsCheckButtonTemplate")
+neutralUnitsCheck:SetPoint("TOPLEFT", friendlyUnitsCheck, "BOTTOMLEFT", 0, -4)
+neutralUnitsCheck.Text:SetText("Neutral units")
+neutralUnitsCheck.Text:SetTextColor(1, 1, 1)
+setOptionTooltip(neutralUnitsCheck, "Neutral units", "Show known abilities for neutral NPCs.")
+neutralUnitsCheck:SetScript("OnShow", function(self)
+    self:SetChecked(getDatabase().showNeutralUnits)
+end)
+neutralUnitsCheck:SetScript("OnClick", function(self)
+    getDatabase().showNeutralUnits = self:GetChecked()
+    refreshCurrentTooltip()
+end)
+
 local hotkeyModeLabel = contentPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-hotkeyModeLabel:SetPoint("TOPLEFT", friendlyUnitsCheck, "BOTTOMLEFT", 4, -8)
+hotkeyModeLabel:SetPoint("TOPLEFT", neutralUnitsCheck, "BOTTOMLEFT", 4, -8)
 hotkeyModeLabel:SetText("Hotkey mode")
 
 local hotkeyModeDropdown = CreateFrame("Frame", "ForeverNPCAbilitiesHotkeyModeDropdown", contentPanel, "UIDropDownMenuTemplate")

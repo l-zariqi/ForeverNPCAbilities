@@ -1,3 +1,6 @@
+## 1.4.1
+- Added support for showing abilities for neutral NPCs, with a separate option to enable or disable them.
+
 ## Version 1.4.0
 - Added configurable category colours for poison, curse, disease, magic, and physical bleed ability names.
 - Added a matching category-coloured border around each ability icon.
