@@ -1,4 +1,4 @@
-## 1.4.1
+## Version 1.4.1
 - Added support for showing abilities for neutral NPCs, with a separate option to enable or disable them.
 
 ## Version 1.4.0
