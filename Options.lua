@@ -9,12 +9,43 @@ local defaultAbilityColors = {
     name = {r = 1, g = 0.82, b = 0},
     description = {r = 1, g = 1, b = 1},
     details = {r = 0.85, g = 0.85, b = 0.85},
-    poison = {r = 0, g = 1, b = 0},
-    curse = {r = 0.65, g = 0.35, b = 1},
-    disease = {r = 0.75, g = 0.48, b = 0.24},
-    magic = {r = 0.35, g = 0.65, b = 1},
-    physical = {r = 1, g = 0.25, b = 0.25},
+    poison = {r = 0.596078, g = 0.870588, b = 0},
+    curse = {r = 0.690196, g = 0.196078, b = 0.909804},
+    disease = {r = 0.913725, g = 0.447059, b = 0.090196},
+    magic = {r = 0, g = 0.482353, b = 0.956863},
+    physical = {r = 0.898039, g = 0.011765, b = 0.086275},
 }
+
+local previousDefaultAbilityColors = {
+    poison = {{r = 0, g = 1, b = 0}},
+    curse = {{r = 0.65, g = 0.35, b = 1}},
+    disease = {{r = 0.75, g = 0.48, b = 0.24}},
+    magic = {
+        {r = 0.35, g = 0.65, b = 1},
+        {r = 0, g = 0.462745, b = 0.921569},
+    },
+    physical = {{r = 1, g = 0.25, b = 0.25}},
+}
+
+local function migrateDefaultAbilityColors(colors)
+    for key, previousColors in pairs(previousDefaultAbilityColors) do
+        local color = colors[key]
+        if type(color) == "table" then
+            for _, previousColor in ipairs(previousColors) do
+                if color.r == previousColor.r
+                    and color.g == previousColor.g
+                    and color.b == previousColor.b
+                then
+                    local defaultColor = defaultAbilityColors[key]
+                    color.r = defaultColor.r
+                    color.g = defaultColor.g
+                    color.b = defaultColor.b
+                    break
+                end
+            end
+        end
+    end
+end
 
 local function getDatabase()
     if type(ForeverNPCAbilitiesDB) ~= "table" then
@@ -42,7 +73,7 @@ local function getDatabase()
         ForeverNPCAbilitiesDB.colorAbilityNames = false
     end
     if type(ForeverNPCAbilitiesDB.showAbilityIconBorders) ~= "boolean" then
-        ForeverNPCAbilitiesDB.showAbilityIconBorders = true
+        ForeverNPCAbilitiesDB.showAbilityIconBorders = false
     end
     if type(ForeverNPCAbilitiesDB.spellIconSize) ~= "number" then
         ForeverNPCAbilitiesDB.spellIconSize = defaultSpellIconSize
@@ -64,6 +95,7 @@ local function getDatabase()
     if type(ForeverNPCAbilitiesDB.colors) ~= "table" then
         ForeverNPCAbilitiesDB.colors = {}
     end
+    migrateDefaultAbilityColors(ForeverNPCAbilitiesDB.colors)
     local previousNameColor = ForeverNPCAbilitiesDB.colors.name
     if type(previousNameColor) == "table"
         and previousNameColor.r == 1
@@ -555,7 +587,7 @@ local appearanceOptions = {
     {
         key = "colorAbilityNames",
         label = "Color ability names by effect type",
-        tooltip = "Use the poison, curse, disease, magic, and physical colors for ability names.",
+        tooltip = "Use the poison, curse, disease, magic, and bleed/physical colors for ability names.",
     },
     {
         key = "showAbilityIconBorders",
@@ -598,7 +630,7 @@ local colorOptions = {
     {key = "curse", label = "Curse names"},
     {key = "disease", label = "Disease names"},
     {key = "magic", label = "Magic names"},
-    {key = "physical", label = "Physical names"},
+    {key = "physical", label = "Bleed / physical names"},
 }
 
 local function openAbilityColorPicker(colorKey, swatch)

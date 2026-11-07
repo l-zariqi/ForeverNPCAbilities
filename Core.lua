@@ -9,12 +9,47 @@ local defaultAbilityColors = {
     name = {r = 1, g = 0.82, b = 0},
     description = {r = 1, g = 1, b = 1},
     details = {r = 0.85, g = 0.85, b = 0.85},
-    poison = {r = 0, g = 1, b = 0},
-    curse = {r = 0.65, g = 0.35, b = 1},
-    disease = {r = 0.75, g = 0.48, b = 0.24},
-    magic = {r = 0.35, g = 0.65, b = 1},
-    physical = {r = 1, g = 0.25, b = 0.25},
+    poison = {r = 0.596078, g = 0.870588, b = 0},
+    curse = {r = 0.690196, g = 0.196078, b = 0.909804},
+    disease = {r = 0.913725, g = 0.447059, b = 0.090196},
+    magic = {r = 0, g = 0.482353, b = 0.956863},
+    physical = {r = 0.898039, g = 0.011765, b = 0.086275},
 }
+
+local previousDefaultAbilityColors = {
+    poison = {{r = 0, g = 1, b = 0}},
+    curse = {{r = 0.65, g = 0.35, b = 1}},
+    disease = {{r = 0.75, g = 0.48, b = 0.24}},
+    magic = {
+        {r = 0.35, g = 0.65, b = 1},
+        {r = 0, g = 0.462745, b = 0.921569},
+    },
+    physical = {{r = 1, g = 0.25, b = 0.25}},
+}
+
+local function migrateDefaultAbilityColors(colors)
+    for key, previousColors in pairs(previousDefaultAbilityColors) do
+        local color = colors[key]
+        if type(color) == "table" then
+            for _, previousColor in ipairs(previousColors) do
+                if color.r == previousColor.r
+                    and color.g == previousColor.g
+                    and color.b == previousColor.b
+                then
+                    local defaultColor = defaultAbilityColors[key]
+                    color.r = defaultColor.r
+                    color.g = defaultColor.g
+                    color.b = defaultColor.b
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function isSecretValue(value)
+    return type(issecretvalue) == "function" and issecretvalue(value)
+end
 
 local abilityNameColorByDispelType = {
     poison = "poison",
@@ -90,6 +125,7 @@ local function getAbilityColor(colorKey)
     if type(database.colors) ~= "table" then
         database.colors = {}
     end
+    migrateDefaultAbilityColors(database.colors)
     local previousNameColor = database.colors.name
     if type(previousNameColor) == "table"
         and previousNameColor.r == 1
@@ -132,7 +168,7 @@ local function getAbilityColor(colorKey)
 end
 
 local function getNpcIDFromGUID(guid)
-    if not guid then
+    if type(guid) ~= "string" or isSecretValue(guid) then
         return nil
     end
 
@@ -241,11 +277,6 @@ local function getAbilityNameColorKey(ability)
     local colorKey = abilityNameColorByDispelType[dispelType]
     if colorKey then
         return colorKey
-    end
-
-    local spellSchool = type(ability.spellSchool) == "string" and string.lower(ability.spellSchool) or ""
-    if mechanic ~= "" and spellSchool:find("physical", 1, true) then
-        return "physical"
     end
 
     return "name"
@@ -364,12 +395,12 @@ local function refreshGameTooltip()
     end
 
     local _, unit = GameTooltip:GetUnit()
-    if unit and UnitExists(unit) then
+    if unit and not isSecretValue(unit) and UnitExists(unit) then
         GameTooltip:SetUnit(unit)
     end
 end
 
-local function appendAbilities(tooltip)
+local function appendAbilities(tooltip, tooltipData)
     if tooltip ~= GameTooltip then
         return
     end
@@ -381,23 +412,48 @@ local function appendAbilities(tooltip)
     end
 
     local _, unit = tooltip:GetUnit()
-    if not unit or not UnitExists(unit) then
-        return
+    if isSecretValue(unit) then
+        unit = nil
+    end
+    if unit and not UnitExists(unit) then
+        unit = nil
     end
 
-    local isEnemy = UnitCanAttack("player", unit)
-    local isNeutral = not isEnemy and UnitReaction("player", unit) == 4
-    local isFriendly = not isNeutral and UnitIsFriend("player", unit)
-    if (isEnemy and not database.showEnemyUnits)
-        or (isFriendly and not database.showFriendlyUnits)
-        or (isNeutral and not database.showNeutralUnits)
-        or (not isEnemy and not isFriendly and not isNeutral)
+    if unit then
+        local isEnemy = UnitCanAttack("player", unit)
+        local isNeutral = not isEnemy and UnitReaction("player", unit) == 4
+        local isFriendly = not isNeutral and UnitIsFriend("player", unit)
+        if (isEnemy and not database.showEnemyUnits)
+            or (isFriendly and not database.showFriendlyUnits)
+            or (isNeutral and not database.showNeutralUnits)
+            or (not isEnemy and not isFriendly and not isNeutral)
+        then
+            return
+        end
+    elseif not database.showEnemyUnits
+        or not database.showFriendlyUnits
+        or not database.showNeutralUnits
     then
+        if state.debugEnabled then
+            tooltip:AddLine("FNA debug: cannot apply unit visibility filters", 0.5, 0.8, 1, true)
+            tooltip:Show()
+        end
         return
     end
 
-    local npcID = getNpcID(unit)
+    local tooltipGUID = tooltipData and tooltipData.guid
+    local npcID = getNpcIDFromGUID(tooltipGUID)
+    if not npcID and unit then
+        npcID = getNpcID(unit)
+    end
     if not npcID then
+        if state.debugEnabled then
+            local reason = isSecretValue(tooltipGUID)
+                and "NPC identity is restricted"
+                or "unable to resolve NPC ID"
+            tooltip:AddLine("FNA debug: " .. reason, 0.5, 0.8, 1, true)
+            tooltip:Show()
+        end
         return
     end
 
@@ -707,7 +763,7 @@ eventFrame:SetScript("OnEvent", function(_, _, loadedAddon)
         database.colorAbilityNames = false
     end
     if type(database.showAbilityIconBorders) ~= "boolean" then
-        database.showAbilityIconBorders = true
+        database.showAbilityIconBorders = false
     end
     if type(database.spellIconSize) ~= "number" then
         database.spellIconSize = defaultSpellIconSize
@@ -723,6 +779,7 @@ eventFrame:SetScript("OnEvent", function(_, _, loadedAddon)
     if type(database.colors) ~= "table" then
         database.colors = {}
     end
+    migrateDefaultAbilityColors(database.colors)
     if database.detailDisplayMode ~= "KEY" and database.detailDisplayMode ~= "NEVER" then
         database.detailDisplayMode = "ALWAYS"
     end

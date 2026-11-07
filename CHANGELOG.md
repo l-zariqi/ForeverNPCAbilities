@@ -1,3 +1,8 @@
+## Version 1.4.2
+- Added NPC ability data for additional Barrens, Tirisfal Glades, and Riverglades NPCs.
+- Tweaked the default ability colors to match the modern UI dispel colors.
+- Improved tooltip handling for restricted unit tokens in instanced content.
+
 ## Version 1.4.1
 - Added support for showing abilities for neutral NPCs, with a separate option to enable or disable them.
 
