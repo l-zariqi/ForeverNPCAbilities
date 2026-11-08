@@ -560,7 +560,7 @@ _G['ForeverNPCAbilitiesNpcData']= {
 [1893] = {sod_spell_ids = {}, classic_spell_ids = {6507, 7164, 7671}},
 [1894] = {sod_spell_ids = {}, classic_spell_ids = {6507, 7164, 7671, 11972, 12169}},
 [1895] = {sod_spell_ids = {}, classic_spell_ids = {7671, 2053}},
-[1896] = {sod_spell_ids = {}, classic_spell_ids = {7671}},
+[1896] = {sod_spell_ids = {}, classic_spell_ids = {7671, 594}},
 [1907] = {sod_spell_ids = {}, classic_spell_ids = {7165, 6548}},
 [1908] = {sod_spell_ids = {}, classic_spell_ids = {2606, 11986}},
 [1909] = {sod_spell_ids = {}, classic_spell_ids = {5605}},

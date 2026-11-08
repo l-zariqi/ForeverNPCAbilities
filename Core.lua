@@ -3,7 +3,75 @@ local descriptionKeyBinding = "CLICK ForeverNPCAbilitiesDescriptionKeyButton:Lef
 local defaultSpellIconSize = 16
 local minimumSpellIconSize = 8
 local maximumSpellIconSize = 32
-local abilityIconBorderThickness = 1
+local defaultAbilityIconBorderStyle = "MATCH_DISPEL_FRAME"
+
+local dispelBorderAtlases = {
+    curse = {
+        noIcon = "ui-debuff-border-curse-noicon",
+        withIcon = "ui-debuff-border-curse-icon",
+    },
+    disease = {
+        noIcon = "ui-debuff-border-disease-noicon",
+        withIcon = "ui-debuff-border-disease-icon",
+    },
+    magic = {
+        noIcon = "ui-debuff-border-magic-noicon",
+        withIcon = "ui-debuff-border-magic-icon",
+    },
+    physical = {
+        noIcon = "ui-debuff-border-bleed-noicon",
+        withIcon = "ui-debuff-border-bleed-icon",
+    },
+    poison = {
+        noIcon = "ui-debuff-border-poison-noicon",
+        withIcon = "ui-debuff-border-poison-icon",
+    },
+}
+
+local abilityIconBorderStyles = {
+    QUICKSLOT = {
+        label = "Quickslot frame",
+        texture = "Interface\\Buttons\\UI-Quickslot2",
+        scale = 64 / 37,
+    },
+    AURA_ICON_FRAME = {
+        label = "Aura frame",
+        atlas = "ui-debuff-border-default-noicon",
+        previewAtlas = "ui-debuff-border-default-noicon",
+        dispelAtlases = {
+            curse = dispelBorderAtlases.curse.noIcon,
+            disease = dispelBorderAtlases.disease.noIcon,
+            magic = dispelBorderAtlases.magic.noIcon,
+            physical = dispelBorderAtlases.physical.noIcon,
+            poison = dispelBorderAtlases.poison.noIcon,
+        },
+        scale = 4 / 3,
+        tint = false,
+    },
+    MATCH_DISPEL_FRAME = {
+        label = "Aura icon frame",
+        atlas = "ui-debuff-border-default-noicon",
+        previewAtlas = dispelBorderAtlases.curse.withIcon,
+        dispelAtlases = {
+            curse = dispelBorderAtlases.curse.withIcon,
+            disease = dispelBorderAtlases.disease.withIcon,
+            magic = dispelBorderAtlases.magic.withIcon,
+            physical = dispelBorderAtlases.physical.withIcon,
+            poison = dispelBorderAtlases.poison.withIcon,
+        },
+        scale = 4 / 3,
+        tint = false,
+    },
+}
+
+local abilityIconBorderStyleOrder = {
+    "QUICKSLOT",
+    "AURA_ICON_FRAME",
+    "MATCH_DISPEL_FRAME",
+}
+
+addon.AbilityIconBorderStyles = abilityIconBorderStyles
+addon.AbilityIconBorderStyleOrder = abilityIconBorderStyleOrder
 
 local defaultAbilityColors = {
     name = {r = 1, g = 0.82, b = 0},
@@ -68,7 +136,7 @@ local function hideAbilityIconBorders()
     end
 end
 
-local function addAbilityIconBorder(tooltip, lineIndex, iconSize, r, g, b)
+local function addAbilityIconBorder(tooltip, lineIndex, iconSize, r, g, b, dispelColorKey)
     local tooltipName = tooltip:GetName()
     local line = tooltipName and _G[tooltipName .. "TextLeft" .. lineIndex]
     if not line then
@@ -81,31 +149,24 @@ local function addAbilityIconBorder(tooltip, lineIndex, iconSize, r, g, b)
         border:SetFrameLevel(tooltip:GetFrameLevel() + 1)
         border:SetSize(iconSize, iconSize)
 
-        local function createEdge(point, relativePoint, oppositePoint, oppositeRelativePoint)
-            local edge = border:CreateTexture(nil, "OVERLAY")
-            edge:SetTexture("Interface\\Buttons\\WHITE8X8")
-            edge:SetVertexColor(r, g, b)
-            edge:SetPoint(point, border, relativePoint)
-            edge:SetPoint(oppositePoint, border, oppositeRelativePoint)
-            return edge
-        end
-
-        border.edges = {
-            createEdge("TOPLEFT", "TOPLEFT", "TOPRIGHT", "TOPRIGHT"),
-            createEdge("BOTTOMLEFT", "BOTTOMLEFT", "BOTTOMRIGHT", "BOTTOMRIGHT"),
-            createEdge("TOPLEFT", "TOPLEFT", "BOTTOMLEFT", "BOTTOMLEFT"),
-            createEdge("TOPRIGHT", "TOPRIGHT", "BOTTOMRIGHT", "BOTTOMRIGHT"),
-        }
-        border.edges[1]:SetHeight(abilityIconBorderThickness)
-        border.edges[2]:SetHeight(abilityIconBorderThickness)
-        border.edges[3]:SetWidth(abilityIconBorderThickness)
-        border.edges[4]:SetWidth(abilityIconBorderThickness)
+        border.texture = border:CreateTexture(nil, "OVERLAY")
+        border.texture:SetPoint("CENTER")
         abilityIconBorders[lineIndex] = border
     end
 
+    local style = abilityIconBorderStyles[database.abilityIconBorderStyle]
+    if style.atlas then
+        local atlas = style.dispelAtlases and style.dispelAtlases[dispelColorKey] or style.atlas
+        border.texture:SetAtlas(atlas)
+    else
+        border.texture:SetTexture(style.texture)
+    end
+    border.texture:SetBlendMode(style.blendMode or "BLEND")
     border:SetSize(iconSize, iconSize)
-    for _, edge in ipairs(border.edges) do
-        edge:SetVertexColor(r, g, b)
+    border.texture:SetSize(iconSize * style.scale, iconSize * style.scale)
+    border.texture:SetVertexColor(r, g, b)
+    if style.tint == false then
+        border.texture:SetVertexColor(1, 1, 1)
     end
     border:ClearAllPoints()
     border:SetPoint("TOPLEFT", line, "TOPLEFT")
@@ -375,7 +436,15 @@ local function addAbilityLine(tooltip, ability)
     end
     tooltip:AddLine(nameText, nameR, nameG, nameB, true)
     if icon ~= "" and database.showAbilityIconBorders then
-        addAbilityIconBorder(tooltip, tooltip:NumLines(), iconSize, nameR, nameG, nameB)
+        addAbilityIconBorder(
+            tooltip,
+            tooltip:NumLines(),
+            iconSize,
+            nameR,
+            nameG,
+            nameB,
+            getAbilityNameColorKey(ability)
+        )
     end
     for _, detail in ipairs(underneathDetails) do
         tooltip:AddLine(detail, detailR, detailG, detailB, true)
@@ -760,10 +829,13 @@ eventFrame:SetScript("OnEvent", function(_, _, loadedAddon)
         database.hideKnownAbilitiesLine = false
     end
     if type(database.colorAbilityNames) ~= "boolean" then
-        database.colorAbilityNames = false
+        database.colorAbilityNames = true
     end
     if type(database.showAbilityIconBorders) ~= "boolean" then
-        database.showAbilityIconBorders = false
+        database.showAbilityIconBorders = true
+    end
+    if not abilityIconBorderStyles[database.abilityIconBorderStyle] then
+        database.abilityIconBorderStyle = defaultAbilityIconBorderStyle
     end
     if type(database.spellIconSize) ~= "number" then
         database.spellIconSize = defaultSpellIconSize

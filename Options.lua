@@ -70,10 +70,13 @@ local function getDatabase()
         ForeverNPCAbilitiesDB.hideKnownAbilitiesLine = false
     end
     if type(ForeverNPCAbilitiesDB.colorAbilityNames) ~= "boolean" then
-        ForeverNPCAbilitiesDB.colorAbilityNames = false
+        ForeverNPCAbilitiesDB.colorAbilityNames = true
     end
     if type(ForeverNPCAbilitiesDB.showAbilityIconBorders) ~= "boolean" then
-        ForeverNPCAbilitiesDB.showAbilityIconBorders = false
+        ForeverNPCAbilitiesDB.showAbilityIconBorders = true
+    end
+    if not addon.AbilityIconBorderStyles[ForeverNPCAbilitiesDB.abilityIconBorderStyle] then
+        ForeverNPCAbilitiesDB.abilityIconBorderStyle = "MATCH_DISPEL_FRAME"
     end
     if type(ForeverNPCAbilitiesDB.spellIconSize) ~= "number" then
         ForeverNPCAbilitiesDB.spellIconSize = defaultSpellIconSize
@@ -158,6 +161,8 @@ end
 
 local refreshCurrentTooltip
 
+local updateBorderStylePreviews
+
 local function setAbilityColor(colorKey, r, g, b)
     local colors = getDatabase().colors
     colors[colorKey] = {
@@ -165,6 +170,9 @@ local function setAbilityColor(colorKey, r, g, b)
         g = g,
         b = b,
     }
+    if updateBorderStylePreviews then
+        updateBorderStylePreviews()
+    end
     refreshCurrentTooltip()
 end
 
@@ -176,6 +184,9 @@ local function resetAbilityColors()
             g = defaultColor.g,
             b = defaultColor.b,
         }
+    end
+    if updateBorderStylePreviews then
+        updateBorderStylePreviews()
     end
     refreshCurrentTooltip()
 end
@@ -240,7 +251,7 @@ optionsScrollFrame:SetScript("OnMouseWheel", function(self, delta)
 end)
 
 local contentPanel = CreateFrame("Frame")
-contentPanel:SetHeight(800)
+contentPanel:SetHeight(900)
 optionsScrollFrame:SetScrollChild(contentPanel)
 optionsScrollFrame:SetScript("OnSizeChanged", function(self, width)
     contentPanel:SetWidth(width)
@@ -586,13 +597,13 @@ end)
 local appearanceOptions = {
     {
         key = "colorAbilityNames",
-        label = "Color ability names by effect type",
-        tooltip = "Use the poison, curse, disease, magic, and bleed/physical colors for ability names.",
+        label = "Color ability names by dispel type",
+        tooltip = "Use the poison, curse, disease, magic, and bleed colors for ability names.",
     },
     {
         key = "showAbilityIconBorders",
         label = "Show colored borders around ability icons",
-        tooltip = "Outline each ability icon using the same color as its ability name.",
+        tooltip = "Frame each ability icon with the selected game texture, tinted to match its ability name.",
     },
 }
 
@@ -612,8 +623,144 @@ for index, option in ipairs(appearanceOptions) do
     end)
 end
 
+local borderStyleLabel = contentPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+borderStyleLabel:SetPoint(
+    "TOPLEFT",
+    detailLayoutDropdown,
+    "BOTTOMLEFT",
+    4,
+    -4 - (#detailOptions + #appearanceOptions + 1) * 28
+)
+borderStyleLabel:SetText("Ability icon border texture")
+
+local borderStyleDropdown = CreateFrame(
+    "Frame",
+    "ForeverNPCAbilitiesBorderStyleDropdown",
+    contentPanel,
+    "UIDropDownMenuTemplate"
+)
+borderStyleDropdown:SetPoint("TOPLEFT", borderStyleLabel, "BOTTOMLEFT", -16, -4)
+UIDropDownMenu_SetWidth(borderStyleDropdown, 190)
+setOptionTooltip(
+    borderStyleDropdown,
+    "Ability icon border texture",
+    "Choose the game texture used for colored borders around ability icons."
+)
+
+local function setBorderStyleText()
+    local style = getDatabase().abilityIconBorderStyle
+    UIDropDownMenu_SetSelectedValue(borderStyleDropdown, style)
+    UIDropDownMenu_SetText(borderStyleDropdown, addon.AbilityIconBorderStyles[style].label)
+end
+
+UIDropDownMenu_Initialize(borderStyleDropdown, function(_, level)
+    for _, value in ipairs(addon.AbilityIconBorderStyleOrder) do
+        local style = addon.AbilityIconBorderStyles[value]
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = style.label
+        info.value = value
+        info.checked = getDatabase().abilityIconBorderStyle == value
+        info.func = function(self)
+            getDatabase().abilityIconBorderStyle = self.value
+            setBorderStyleText()
+            updateBorderStylePreviews()
+            refreshCurrentTooltip()
+        end
+        UIDropDownMenu_AddButton(info, level)
+    end
+end)
+
+borderStyleDropdown:SetScript("OnShow", function()
+    setBorderStyleText()
+end)
+
+local borderPreviewLabel = contentPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+borderPreviewLabel:SetPoint("TOPLEFT", borderStyleDropdown, "BOTTOMLEFT", 28, -4)
+borderPreviewLabel:SetText("Preview (click to select)")
+
+local borderPreviewContainer = CreateFrame("Frame", nil, contentPanel)
+borderPreviewContainer:SetPoint("TOPLEFT", borderPreviewLabel, "BOTTOMLEFT", 0, -4)
+local borderPreviewColumnCount = 5
+local borderPreviewRowHeight = 64
+borderPreviewContainer:SetSize(
+    400,
+    math.ceil(#addon.AbilityIconBorderStyleOrder / borderPreviewColumnCount) * borderPreviewRowHeight + 4
+)
+
+local borderPreviewButtons = {}
+for index, styleKey in ipairs(addon.AbilityIconBorderStyleOrder) do
+    local previewStyleKey = styleKey
+    local style = addon.AbilityIconBorderStyles[styleKey]
+    local row = math.floor((index - 1) / borderPreviewColumnCount)
+    local column = (index - 1) % borderPreviewColumnCount
+    local button = CreateFrame("Button", nil, borderPreviewContainer)
+    button:SetSize(76, 64)
+    button:SetPoint("TOPLEFT", borderPreviewContainer, "TOPLEFT", column * 78, -row * borderPreviewRowHeight)
+    local tooltipText = "Click to use this border texture."
+    if style.dispelAtlases then
+        tooltipText = tooltipText .. " In NPC tooltips, it uses the matching dispel frame, or the regular aura frame when no dispel type is known."
+    end
+    setOptionTooltip(button, style.label, tooltipText)
+
+    local icon = button:CreateTexture(nil, "ARTWORK")
+    icon:SetSize(24, 24)
+    icon:SetPoint("TOP", button, "TOP", 0, -2)
+    icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+    icon:SetTexCoord(4 / 64, 60 / 64, 4 / 64, 60 / 64)
+
+    local border = button:CreateTexture(nil, "OVERLAY")
+    border:SetPoint("CENTER", icon, "CENTER")
+    if style.previewAtlas then
+        border:SetAtlas(style.previewAtlas)
+    elseif style.atlas then
+        border:SetAtlas(style.atlas)
+    else
+        border:SetTexture(style.texture)
+    end
+    border:SetBlendMode(style.blendMode or "BLEND")
+    border:SetSize(24 * style.scale, 24 * style.scale)
+
+    local label = button:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+    label:SetPoint("TOPLEFT", button, "TOPLEFT", 0, -32)
+    label:SetSize(76, 28)
+    label:SetJustifyH("CENTER")
+    label:SetText(style.label)
+
+    button:SetScript("OnClick", function()
+        getDatabase().abilityIconBorderStyle = previewStyleKey
+        setBorderStyleText()
+        updateBorderStylePreviews()
+        refreshCurrentTooltip()
+    end)
+
+    borderPreviewButtons[#borderPreviewButtons + 1] = {
+        border = border,
+        label = label,
+        styleKey = previewStyleKey,
+    }
+end
+
+updateBorderStylePreviews = function()
+    local r, g, b = getAbilityColor("name")
+    local selectedStyle = getDatabase().abilityIconBorderStyle
+    for _, preview in ipairs(borderPreviewButtons) do
+        local style = addon.AbilityIconBorderStyles[preview.styleKey]
+        if style.tint == false then
+            preview.border:SetVertexColor(1, 1, 1)
+        else
+            preview.border:SetVertexColor(r, g, b)
+        end
+        preview.label:SetTextColor(
+            preview.styleKey == selectedStyle and 1 or 0.85,
+            preview.styleKey == selectedStyle and 0.82 or 0.85,
+            preview.styleKey == selectedStyle and 0 or 0.85
+        )
+    end
+end
+updateBorderStylePreviews()
+
 local colorLabel = contentPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-colorLabel:SetPoint("TOPLEFT", detailLayoutDropdown, "BOTTOMLEFT", 4, -4 - (#detailOptions + 1 + #appearanceOptions) * 28 - 12)
+colorLabel:SetPoint("TOPLEFT", borderPreviewContainer, "BOTTOMLEFT", 0, -8)
 colorLabel:SetText("Tooltip colors")
 
 local function updateColorSwatch(button, colorKey)
@@ -630,7 +777,7 @@ local colorOptions = {
     {key = "curse", label = "Curse names"},
     {key = "disease", label = "Disease names"},
     {key = "magic", label = "Magic names"},
-    {key = "physical", label = "Bleed / physical names"},
+    {key = "physical", label = "Bleed names"},
 }
 
 local function openAbilityColorPicker(colorKey, swatch)
@@ -755,6 +902,7 @@ optionsPanel:SetScript("OnShow", function()
     setHotkeyModeText()
     setDetailDisplayText()
     setDetailLayoutText()
+    setBorderStyleText()
 end)
 
 local category

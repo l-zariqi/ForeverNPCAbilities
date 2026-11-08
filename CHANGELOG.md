@@ -1,3 +1,8 @@
+## v1.5.0
+- Added a dropdown to choose the texture used for colored ability icon borders.
+- Added clickable previews for each ability icon border texture.
+- Added a border style that automatically matches each ability's dispel type, with the regular aura frame as fallback.
+
 ## Version 1.4.2
 - Added NPC ability data for additional Barrens, Tirisfal Glades, and Riverglades NPCs.
 - Tweaked the default ability colors to match the modern UI dispel colors.

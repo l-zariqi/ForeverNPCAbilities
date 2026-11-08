@@ -1,7 +1,7 @@
 ## Interface: 16001
 ## Title: Forever NPC Abilities
 ## Notes: Shows known abilities in NPC tooltips.
-## Version: 1.4.2
+## Version: 1.5.0
 ## SavedVariables: ForeverNPCAbilitiesDB
 ## IconTexture: Interface\Icons\INV_Misc_Book_04
 
