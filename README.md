@@ -1,6 +1,6 @@
 # Forever NPC Abilities
 
-Shows known NPC abilities and spell details to the in-game tooltip. It uses a bundled NPC and spell database to show ability names, icons, and available details such as range, cast time, and spell school.
+Shows known NPC abilities and spell details to the in-game tooltip. It uses a bundled NPC and spell database to show ability names, icons, and available details such as range, cast time, spell school and dispel type.
 
 ## Install
 
