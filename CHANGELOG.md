@@ -1,4 +1,8 @@
-## v1.5.0
+## Version 1.5.1
+- Fixed an issue where ability icon borders would appear when hovering over objects.
+- Removed the icon border checkbox and added "None" to the border-style dropdown. Selecting it hides ability icon borders.
+
+## Version 1.5.0
 - Added a dropdown to choose the texture used for colored ability icon borders.
 - Added clickable previews for each ability icon border texture.
 - Added a border style that automatically matches each ability's dispel type, with the regular aura frame as fallback.

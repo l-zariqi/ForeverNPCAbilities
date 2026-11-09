@@ -72,9 +72,10 @@ local function getDatabase()
     if type(ForeverNPCAbilitiesDB.colorAbilityNames) ~= "boolean" then
         ForeverNPCAbilitiesDB.colorAbilityNames = true
     end
-    if type(ForeverNPCAbilitiesDB.showAbilityIconBorders) ~= "boolean" then
-        ForeverNPCAbilitiesDB.showAbilityIconBorders = true
+    if ForeverNPCAbilitiesDB.showAbilityIconBorders == false then
+        ForeverNPCAbilitiesDB.abilityIconBorderStyle = "NONE"
     end
+    ForeverNPCAbilitiesDB.showAbilityIconBorders = nil
     if not addon.AbilityIconBorderStyles[ForeverNPCAbilitiesDB.abilityIconBorderStyle] then
         ForeverNPCAbilitiesDB.abilityIconBorderStyle = "MATCH_DISPEL_FRAME"
     end
@@ -600,11 +601,6 @@ local appearanceOptions = {
         label = "Color ability names by dispel type",
         tooltip = "Use the poison, curse, disease, magic, and bleed colors for ability names.",
     },
-    {
-        key = "showAbilityIconBorders",
-        label = "Show colored borders around ability icons",
-        tooltip = "Frame each ability icon with the selected game texture, tinted to match its ability name.",
-    },
 }
 
 for index, option in ipairs(appearanceOptions) do
@@ -644,7 +640,7 @@ UIDropDownMenu_SetWidth(borderStyleDropdown, 190)
 setOptionTooltip(
     borderStyleDropdown,
     "Ability icon border texture",
-    "Choose the game texture used for colored borders around ability icons."
+    "Choose the game texture used for ability icon borders, or select None to hide them."
 )
 
 local function setBorderStyleText()
@@ -696,7 +692,9 @@ for index, styleKey in ipairs(addon.AbilityIconBorderStyleOrder) do
     local button = CreateFrame("Button", nil, borderPreviewContainer)
     button:SetSize(76, 64)
     button:SetPoint("TOPLEFT", borderPreviewContainer, "TOPLEFT", column * 78, -row * borderPreviewRowHeight)
-    local tooltipText = "Click to use this border texture."
+    local tooltipText = styleKey == "NONE"
+        and "Click to hide ability icon borders."
+        or "Click to use this border texture."
     if style.dispelAtlases then
         tooltipText = tooltipText .. " In NPC tooltips, it uses the matching dispel frame, or the regular aura frame when no dispel type is known."
     end
@@ -708,17 +706,20 @@ for index, styleKey in ipairs(addon.AbilityIconBorderStyleOrder) do
     icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
     icon:SetTexCoord(4 / 64, 60 / 64, 4 / 64, 60 / 64)
 
-    local border = button:CreateTexture(nil, "OVERLAY")
-    border:SetPoint("CENTER", icon, "CENTER")
-    if style.previewAtlas then
-        border:SetAtlas(style.previewAtlas)
-    elseif style.atlas then
-        border:SetAtlas(style.atlas)
-    else
-        border:SetTexture(style.texture)
+    local border
+    if styleKey ~= "NONE" then
+        border = button:CreateTexture(nil, "OVERLAY")
+        border:SetPoint("CENTER", icon, "CENTER")
+        if style.previewAtlas then
+            border:SetAtlas(style.previewAtlas)
+        elseif style.atlas then
+            border:SetAtlas(style.atlas)
+        else
+            border:SetTexture(style.texture)
+        end
+        border:SetBlendMode(style.blendMode or "BLEND")
+        border:SetSize(24 * style.scale, 24 * style.scale)
     end
-    border:SetBlendMode(style.blendMode or "BLEND")
-    border:SetSize(24 * style.scale, 24 * style.scale)
 
     local label = button:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
     label:SetPoint("TOPLEFT", button, "TOPLEFT", 0, -32)
@@ -745,10 +746,12 @@ updateBorderStylePreviews = function()
     local selectedStyle = getDatabase().abilityIconBorderStyle
     for _, preview in ipairs(borderPreviewButtons) do
         local style = addon.AbilityIconBorderStyles[preview.styleKey]
-        if style.tint == false then
-            preview.border:SetVertexColor(1, 1, 1)
-        else
-            preview.border:SetVertexColor(r, g, b)
+        if preview.border then
+            if style.tint == false then
+                preview.border:SetVertexColor(1, 1, 1)
+            else
+                preview.border:SetVertexColor(r, g, b)
+            end
         end
         preview.label:SetTextColor(
             preview.styleKey == selectedStyle and 1 or 0.85,

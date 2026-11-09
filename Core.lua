@@ -29,6 +29,9 @@ local dispelBorderAtlases = {
 }
 
 local abilityIconBorderStyles = {
+    NONE = {
+        label = "None",
+    },
     QUICKSLOT = {
         label = "Quickslot frame",
         texture = "Interface\\Buttons\\UI-Quickslot2",
@@ -65,6 +68,7 @@ local abilityIconBorderStyles = {
 }
 
 local abilityIconBorderStyleOrder = {
+    "NONE",
     "QUICKSLOT",
     "AURA_ICON_FRAME",
     "MATCH_DISPEL_FRAME",
@@ -175,6 +179,9 @@ end
 
 if GameTooltip:HasScript("OnHide") then
     GameTooltip:HookScript("OnHide", hideAbilityIconBorders)
+end
+if GameTooltip:HasScript("OnTooltipCleared") then
+    GameTooltip:HookScript("OnTooltipCleared", hideAbilityIconBorders)
 end
 
 local function getAbilityColor(colorKey)
@@ -435,7 +442,7 @@ local function addAbilityLine(tooltip, ability)
             )
     end
     tooltip:AddLine(nameText, nameR, nameG, nameB, true)
-    if icon ~= "" and database.showAbilityIconBorders then
+    if icon ~= "" and database.abilityIconBorderStyle ~= "NONE" then
         addAbilityIconBorder(
             tooltip,
             tooltip:NumLines(),
@@ -831,9 +838,10 @@ eventFrame:SetScript("OnEvent", function(_, _, loadedAddon)
     if type(database.colorAbilityNames) ~= "boolean" then
         database.colorAbilityNames = true
     end
-    if type(database.showAbilityIconBorders) ~= "boolean" then
-        database.showAbilityIconBorders = true
+    if database.showAbilityIconBorders == false then
+        database.abilityIconBorderStyle = "NONE"
     end
+    database.showAbilityIconBorders = nil
     if not abilityIconBorderStyles[database.abilityIconBorderStyle] then
         database.abilityIconBorderStyle = defaultAbilityIconBorderStyle
     end
