@@ -59,11 +59,49 @@ addon.Abilities[250927] = {
     { name = "Ravage", spellID = 3242 },
 }
 
+addon.Abilities[255829] = {
+    { name = "Battle Shout", spellID = 9128 },
+}
+
 addon.Abilities[255890] = {
     { name = "Camp Benefits", spellID = 1229741 },
     { name = "Dazed", spellID = 1604 },
     { name = "Net", spellID = 12024 },
     { name = "Vigilant", spellID = 1326064 },
+}
+
+addon.Abilities[256881] = {
+    { name = "Dazed", spellID = 1604 },
+    { name = "Mighty Blow", spellID = 14099 },
+    { name = "Piercing Howl", spellID = 23600 },
+}
+
+addon.Abilities[256952] = {
+    { name = "Dazed", spellID = 1604 },
+    { name = "Net", spellID = 12024 },
+    { name = "Piercing Howl", spellID = 23600 },
+}
+
+addon.Abilities[257861] = {
+    { name = "Dazed", spellID = 1604 },
+    { name = "Rend", spellID = 11977 },
+    { name = "Strike", spellID = 11976 },
+}
+
+addon.Abilities[258023] = {
+    { name = "Camp Benefits", spellID = 1229741 },
+    { name = "Dazed", spellID = 1604 },
+}
+
+addon.Abilities[259158] = {
+    { name = "Battle Shout", spellID = 5242 },
+    { name = "Battle Stance", spellID = 7165 },
+    { name = "Dazed", spellID = 1604 },
+    { name = "Thunder Clap", spellID = 8198 },
+}
+
+addon.Abilities[259254] = {
+    { name = "Dazed", spellID = 1604 },
 }
 
 addon.Abilities[259388] = {
@@ -87,6 +125,17 @@ addon.Abilities[259434] = {
     { name = "Rend", spellID = 11977 },
 }
 
+addon.Abilities[259758] = {
+    { name = "Dazed", spellID = 1604 },
+    { name = "Smash", spellID = 18944 },
+    { name = "War Stomp", spellID = 45 },
+    { name = "Shoot", spellID = 1316579 },
+}
+
+addon.Abilities[260235] = {
+    { name = "Dazed", spellID = 1604 },
+}
+
 addon.Abilities[261368] = {
     { name = "Dazed", spellID = 1604 },
     { name = "Shield Bash", spellID = 11972 },
@@ -96,6 +145,32 @@ addon.Abilities[262119] = {
     { name = "Dazed", spellID = 1604 },
     { name = "Demoralizing Shout", spellID = 13730 },
     { name = "Strike", spellID = 12057 },
+}
+
+addon.Abilities[262397] = {
+    { name = "Battle Stance", spellID = 7165 },
+    { name = "Dazed", spellID = 1604 },
+    { name = "Rend", spellID = 6548 },
+}
+
+addon.Abilities[263141] = {
+    { name = "Flame Breath", spellID = 8873 },
+}
+
+addon.Abilities[263315] = {
+    { name = "Dazed", spellID = 1604 },
+    { name = "Pierce Armor", spellID = 6016 },
+    { name = "Rend Flesh", spellID = 3147 },
+}
+
+addon.Abilities[263380] = {
+    { name = "Dazed", spellID = 1604 },
+    { name = "Rend", spellID = 13445 },
+    { name = "Tendon Rip", spellID = 3604 },
+}
+
+addon.Abilities[263615] = {
+    { name = "Infected Bite", spellID = 7367 },
 }
 
 addon.Abilities[267307] = {
@@ -135,6 +210,13 @@ addon.Abilities[268623] = {
 addon.Abilities[268624] = {
     { name = "Dazed", spellID = 1604 },
     { name = "Sinister Strike", spellID = 1757 },
+}
+
+addon.Abilities[270667] = {
+    { name = "Dazed", spellID = 1604 },
+    { name = "Heal", spellID = 6063 },
+    { name = "Holy Smite", spellID = 9734 },
+    { name = "Renew", spellID = 8362 },
 }
 
 addon.Abilities[274978] = {

@@ -197,6 +197,12 @@
       "spellID": 3242
     }
   ],
+  "255829": [
+    {
+      "name": "Battle Shout",
+      "spellID": 9128
+    }
+  ],
   "255890": [
     {
       "name": "Camp Benefits",
@@ -213,6 +219,86 @@
     {
       "name": "Vigilant",
       "spellID": 1326064
+    }
+  ],
+  "256418": [],
+  "256831": [],
+  "256881": [
+    {
+      "name": "Dazed",
+      "spellID": 1604
+    },
+    {
+      "name": "Mighty Blow",
+      "spellID": 14099
+    },
+    {
+      "name": "Piercing Howl",
+      "spellID": 23600
+    }
+  ],
+  "256952": [
+    {
+      "name": "Dazed",
+      "spellID": 1604
+    },
+    {
+      "name": "Net",
+      "spellID": 12024
+    },
+    {
+      "name": "Piercing Howl",
+      "spellID": 23600
+    }
+  ],
+  "257558": [],
+  "257861": [
+    {
+      "name": "Dazed",
+      "spellID": 1604
+    },
+    {
+      "name": "Rend",
+      "spellID": 11977
+    },
+    {
+      "name": "Strike",
+      "spellID": 11976
+    }
+  ],
+  "258023": [
+    {
+      "name": "Camp Benefits",
+      "spellID": 1229741
+    },
+    {
+      "name": "Dazed",
+      "spellID": 1604
+    }
+  ],
+  "258570": [],
+  "259158": [
+    {
+      "name": "Battle Shout",
+      "spellID": 5242
+    },
+    {
+      "name": "Battle Stance",
+      "spellID": 7165
+    },
+    {
+      "name": "Dazed",
+      "spellID": 1604
+    },
+    {
+      "name": "Thunder Clap",
+      "spellID": 8198
+    }
+  ],
+  "259254": [
+    {
+      "name": "Dazed",
+      "spellID": 1604
     }
   ],
   "259388": [
@@ -259,6 +345,30 @@
       "spellID": 11977
     }
   ],
+  "259758": [
+    {
+      "name": "Dazed",
+      "spellID": 1604
+    },
+    {
+      "name": "Smash",
+      "spellID": 18944
+    },
+    {
+      "name": "War Stomp",
+      "spellID": 45
+    },
+    {
+      "name": "Shoot",
+      "spellID": 1316579
+    }
+  ],
+  "260235": [
+    {
+      "name": "Dazed",
+      "spellID": 1604
+    }
+  ],
   "261368": [
     {
       "name": "Dazed",
@@ -281,6 +391,61 @@
     {
       "name": "Strike",
       "spellID": 12057
+    }
+  ],
+  "262397": [
+    {
+      "name": "Battle Stance",
+      "spellID": 7165
+    },
+    {
+      "name": "Dazed",
+      "spellID": 1604
+    },
+    {
+      "name": "Rend",
+      "spellID": 6548
+    }
+  ],
+  "263141": [
+    {
+      "name": "Flame Breath",
+      "spellID": 8873
+    }
+  ],
+  "263315": [
+    {
+      "name": "Dazed",
+      "spellID": 1604
+    },
+    {
+      "name": "Pierce Armor",
+      "spellID": 6016
+    },
+    {
+      "name": "Rend Flesh",
+      "spellID": 3147
+    }
+  ],
+  "263380": [
+    {
+      "name": "Dazed",
+      "spellID": 1604
+    },
+    {
+      "name": "Rend",
+      "spellID": 13445
+    },
+    {
+      "name": "Tendon Rip",
+      "spellID": 3604
+    }
+  ],
+  "263384": [],
+  "263615": [
+    {
+      "name": "Infected Bite",
+      "spellID": 7367
     }
   ],
   "267307": [
@@ -367,6 +532,24 @@
     {
       "name": "Sinister Strike",
       "spellID": 1757
+    }
+  ],
+  "270667": [
+    {
+      "name": "Dazed",
+      "spellID": 1604
+    },
+    {
+      "name": "Heal",
+      "spellID": 6063
+    },
+    {
+      "name": "Holy Smite",
+      "spellID": 9734
+    },
+    {
+      "name": "Renew",
+      "spellID": 8362
     }
   ],
   "274978": [

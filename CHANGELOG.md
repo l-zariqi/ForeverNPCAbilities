@@ -1,3 +1,6 @@
+## Version 1.5.2
+- Added abilities for NPCs in the Riverglades.
+
 ## Version 1.5.1
 - Fixed an issue where ability icon borders would appear when hovering over objects.
 - Removed the icon border checkbox and added "None" to the border-style dropdown. Selecting it hides ability icon borders.

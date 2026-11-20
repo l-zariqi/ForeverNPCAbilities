@@ -256,6 +256,11 @@ local function getNpcID(unit)
     return getNpcIDFromGUID(UnitGUID(unit))
 end
 
+local function isDazedAbility(name, spellID)
+    return tonumber(spellID) == 1604
+        or (type(name) == "string" and string.lower(name) == "dazed")
+end
+
 local function getSpellTexture(spellID)
     if not spellID then
         return nil
@@ -536,13 +541,19 @@ local function appendAbilities(tooltip, tooltipData)
     local knownAbilities = {}
     local knownNames = {}
     local function addKnownAbility(name, spellID, description, metadata)
-        if type(name) ~= "string" or name == "" then
+        if type(name) ~= "string" or name == "" or isDazedAbility(name, spellID) then
             return
         end
         local normalizedName = string.lower(name)
         local existing = knownNames[normalizedName]
         metadata = metadata or {}
         local effectData = getSpellEffectData(spellID)
+        if type(description) ~= "string" or description == "" then
+            description = effectData and effectData.description
+            if type(description) ~= "string" or description == "" then
+                description = getSpellDescription(spellID)
+            end
+        end
         if not existing then
             existing = {
                 name = name,
@@ -626,7 +637,10 @@ local function appendAbilities(tooltip, tooltipData)
     if type(observedSpells) == "table" then
         for spellID, spellName in pairs(observedSpells) do
             local normalizedName = type(spellName) == "string" and string.lower(spellName)
-            if normalizedName and spellName ~= "" and not shownNames[normalizedName] then
+            if normalizedName and spellName ~= ""
+                and not isDazedAbility(spellName, spellID)
+                and not shownNames[normalizedName]
+            then
                 local numericSpellID = tonumber(spellID)
                 local effectData = getSpellEffectData(numericSpellID)
                 newObservedSpells[#newObservedSpells + 1] = {

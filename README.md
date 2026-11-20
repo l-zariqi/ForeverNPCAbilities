@@ -17,7 +17,9 @@ Shows known NPC abilities and spell details to the in-game tooltip. It uses a bu
 
 The bundled catalog includes NPC abilities that appear immediately when you hover a listed NPC, whether it is friendly, neutral, or hostile. Neutral NPCs can be enabled or disabled separately in the options. Vehicle units are also supported when their NPC ID is present in the catalog. Automatic combat-log learning is disabled because this Forever client blocks the addon's combat-log event registration. Previously saved observations remain available, but NPCs missing from the catalog will not be learned automatically.
 
-The bundled catalog also includes the original NpcAbilities Classic NPC-to-spell mappings and English spell data. For NPCs in that catalog, abilities appear immediately when you hover them, with the spell icon and description where available.
+The generic Dazed effect is excluded from known and previously observed ability lists.
+
+The bundled catalog also includes the original NpcAbilities Classic NPC-to-spell mappings and English spell data. For NPCs in that catalog, abilities appear immediately when you hover them, with the spell icon and description where available. Imported abilities use their provided descriptions, bundled English spell data, or the game client's spell descriptions. Descriptions appear while holding the configured description key, or always if enabled in the addon options; some spells may not have a description available.
 
 Spell school masks are bundled from Wago.Tools' Classic `SpellMisc` data (build `1.60.1.70245`), with missing records backfilled from TBC Classic (build `2.5.6.70006`). School details may be unavailable for spell IDs absent from both exports.
 
